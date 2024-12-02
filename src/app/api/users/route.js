@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 
-export async function GET() {
-  const API_URL = 'https://api.clinked.com/v3/accounts/21680/groups?page=1&size=100';
+export async function GET(request) {
+
+// Extract `groupId` from query parameters
+const { searchParams } = new URL(request.url);
+const groupId = searchParams.get("groupId");
+
+  const API_URL = `https://api.clinked.com/v3/accounts/21680/groups/${groupId}`;
   const BEARER_TOKEN = 'fca75494-1254-46df-a88c-ea51ac12a299';
 
   try {
