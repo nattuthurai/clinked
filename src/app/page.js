@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Updated import
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const router = useRouter();
@@ -9,20 +9,42 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Placeholder authentication logic
-    if (email === "test@example.com" && password === "password123") {
-      router.push("/audit"); // Redirect on successful login
-    } else {
-      setError("Invalid email or password. Please try again.");
+    try {
+      const response = await fetch(`/api/getSharePointList`);
+      if (!response.ok) throw new Error(await response.text());
+      const data = await response.json();
+
+      //console.log(data.value);
+
+      const filteredItems = data.value.filter(
+        (item) =>
+          item.fields?.UserName === email && item.fields?.Password === password
+      );
+
+      if (filteredItems.length == 1) {
+        router.push("/audit");
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
+    } catch (err) {
+      setError(err.message);
     }
+
+    // Placeholder authentication logic
+    // if (email === "test@example.com" && password === "password123") {
+    //   router.push("/audit"); // Redirect on successful login
+    // } else {
+    //   setError("Invalid email or password. Please try again.");
+    // }
   };
 
   return (
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+      
       {/* Logo Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <img
