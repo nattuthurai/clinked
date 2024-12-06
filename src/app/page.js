@@ -13,8 +13,7 @@ export default function Login() {
 
   // useEffect(() => {
 
-  //   const tenantId = process.env.TENANT_ID;
-  //   console.log("tenantId:"+tenantId);
+
 
   // }, []);
 

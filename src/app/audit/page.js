@@ -16,7 +16,7 @@ export default function AuditTrail() {
   const [selectedMember, setSelectedMember] = useState("Select User");
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
   const [selectedEndDate, setSelectedEndDate] = useState(new Date());
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
 
   const isWithinRange = (inputDate, startDate, endDate) => {
     const date = new Date(inputDate);
@@ -58,22 +58,21 @@ export default function AuditTrail() {
     // Fetch initial dropdown data
     const fetchData = async () => {
       try {
-
-        const storedName = localStorage.getItem('UserName');
+        const storedName = localStorage.getItem("UserName");
         //console.log("storedName"+storedName);
         setUserName(storedName);
 
-      const responseClient = await fetch(`/api/getSharePointClientName`);
-      if (!responseClient.ok) throw new Error(await responseClient.text());
-      const dataClient = await responseClient.json();
+        const responseClient = await fetch(`/api/getSharePointClientName`);
+        if (!responseClient.ok) throw new Error(await responseClient.text());
+        const dataClient = await responseClient.json();
 
-      console.log(dataClient.value);
+        console.log(dataClient.value);
 
         const response = await fetch("/api/client");
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.statusText}`);
         }
-         const result = await response.json();
+        const result = await response.json();
 
         // setDataDropdown(
         //   result.map((item) => ({ value: item.id, label: item.friendlyName }))
@@ -81,13 +80,13 @@ export default function AuditTrail() {
 
         const dropdownData = [];
         result.forEach((item) => {
-
           //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
 
-           const filteredItems = dataClient.value.filter(
+          const filteredItems = dataClient.value.filter(
             (itemClient) =>
-              itemClient.fields?.TaxAssessorName === storedName && itemClient.fields?.ClientName === item.friendlyName
-           );
+              itemClient.fields?.TaxAssessorName === storedName &&
+              itemClient.fields?.ClientName === item.friendlyName
+          );
 
           if (filteredItems.length == 1) {
             dropdownData.push({ value: item.id, label: item.friendlyName });
@@ -109,6 +108,41 @@ export default function AuditTrail() {
 
   const handleChangeUser = (event) => {
     setSelectedMember(event.target.value);
+  };
+
+  const handleDownload = async (event) => {
+    event.preventDefault();
+    //console.log("selectedValue"+selectedValue);
+    //console.log("selectedID"+event.target.id);
+
+    try {
+      const response = await fetch(
+        `/api/fileDownload?groupID=${selectedValue}&fileID=${event.target.id}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to download the file");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const fileName = contentDisposition
+        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+        : "downloaded_file";
+
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      setError(err.message);
+      console.error("Error downloading file:", err);
+    } finally {
+    }
   };
 
   const handleChange = async (event) => {
@@ -160,7 +194,7 @@ export default function AuditTrail() {
       );
       if (sharedDataResponse.ok) {
         const sharedDataResult = await sharedDataResponse.json();
-        //console.log(sharedDataResult);
+        console.log(sharedDataResult);
         setSharedData(sharedDataResult);
         setLoadData(true);
       }
@@ -367,7 +401,6 @@ export default function AuditTrail() {
           <div className="bg-white p-6 rounded-md shadow-md space-y-4">
             {/* Date Range */}
             <div>
-              
               <div className="flex items-center space-x-4 mt-2">
                 <div className="flex items-center space-x-2">
                   <label className="block text-sm font-bold pr-2">
@@ -396,8 +429,8 @@ export default function AuditTrail() {
             </div>
             <div className="flex items-center space-x-4 mt-2">
               <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold">Clients :</label> &nbsp; &nbsp;&nbsp;
-
+                <label className="block text-sm font-bold">Clients :</label>{" "}
+                &nbsp; &nbsp;&nbsp;
                 <select
                   id="dropdown"
                   value={selectedValue}
@@ -433,7 +466,9 @@ export default function AuditTrail() {
             <div className="flex items-center space-x-4 mt-2">
               {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
-            <div className="flex items-center space-x-4 mt-2 ml-20"> &nbsp;&nbsp;&nbsp;
+            <div className="flex items-center space-x-4 mt-2 ml-20">
+              {" "}
+              &nbsp;&nbsp;&nbsp;
               <button
                 type="submit"
                 onClick={handleSubmit}
@@ -466,6 +501,9 @@ export default function AuditTrail() {
                   <th scope="col" className="px-6 py-3">
                     Last Modified
                   </th>
+                  <th scope="col" className="px-6 py-3">
+                    Download
+                  </th>
                 </tr>
               </thead>
 
@@ -492,6 +530,28 @@ export default function AuditTrail() {
                     </td>
                     <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                       {formatDate(item.lastModified)}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {/* <a onClick={handleDownload} id={item.id}>
+                        Download
+                      </a> */}
+                      <a
+                        onClick={handleDownload}
+                        id={item.id}
+                        style={{
+                          color: "blue", // Link color
+                          textDecoration: "underline", // Underline to mimic traditional links
+                          cursor: "pointer", // Hand icon for click
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.color = "darkblue"; // Change color on hover
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.color = "blue"; // Reset color when not hovered
+                        }}
+                      >
+                        Download File
+                      </a>
                     </td>
                   </tr>
                 ))}

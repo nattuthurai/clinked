@@ -1,10 +1,8 @@
-// app/api/getsharedfolder/route.js
-
 const BEARER_TOKEN = process.env.TOKEN;
 
 export async function GET(request) {
   const baseHeaders = {
-    Authorization: AuthorizationToken, // Use environment variables in production
+    Authorization: `Bearer ${BEARER_TOKEN}`, // Use environment variables in production
   };
 
   // Extract `groupId` from query parameters
@@ -16,7 +14,6 @@ export async function GET(request) {
       JSON.stringify({ error: "Missing required parameter: groupId" }),
       {
         status: 400,
-        //headers: { "Content-Type": "application/json" },
         headers: {
           Authorization: `Bearer ${BEARER_TOKEN}`,
           'Content-Type': 'application/json',
@@ -53,12 +50,6 @@ export async function GET(request) {
       );
     }
     const secondData = await secondResponse.json();
-
-    // Combine both API results
-    //   const combinedResult = {
-    //     firstApiResult: firstData,
-    //     secondApiResult: secondData,
-    //   };
 
     // Return the combined result
     return new Response(JSON.stringify(secondData), {
