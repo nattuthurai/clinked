@@ -16,6 +16,7 @@ export default function AuditTrail() {
   const [selectedMember, setSelectedMember] = useState("Select User");
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
   const [selectedEndDate, setSelectedEndDate] = useState(new Date());
+  const [userName, setUserName] = useState('');
 
   const isWithinRange = (inputDate, startDate, endDate) => {
     const date = new Date(inputDate);
@@ -57,14 +58,44 @@ export default function AuditTrail() {
     // Fetch initial dropdown data
     const fetchData = async () => {
       try {
+
+        const storedName = localStorage.getItem('UserName');
+        //console.log("storedName"+storedName);
+        setUserName(storedName);
+
+      const responseClient = await fetch(`/api/getSharePointClientName`);
+      if (!responseClient.ok) throw new Error(await responseClient.text());
+      const dataClient = await responseClient.json();
+
+      console.log(dataClient.value);
+
         const response = await fetch("/api/client");
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.statusText}`);
         }
-        const result = await response.json();
-        setDataDropdown(
-          result.map((item) => ({ value: item.id, label: item.friendlyName }))
-        );
+         const result = await response.json();
+
+        // setDataDropdown(
+        //   result.map((item) => ({ value: item.id, label: item.friendlyName }))
+        // );
+
+        const dropdownData = [];
+        result.forEach((item) => {
+
+          //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
+
+           const filteredItems = dataClient.value.filter(
+            (itemClient) =>
+              itemClient.fields?.TaxAssessorName === storedName && itemClient.fields?.ClientName === item.friendlyName
+           );
+
+          if (filteredItems.length == 1) {
+            dropdownData.push({ value: item.id, label: item.friendlyName });
+          }
+        });
+
+        setDataDropdown(dropdownData);
+
         setData(result);
       } catch (err) {
         setError(err.message);

@@ -5,9 +5,18 @@ import { useRouter } from "next/navigation";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("nattuthurai.k@live.com");
+  const [password, setPassword] = useState("Welcome123");
   const [error, setError] = useState("");
+
+
+
+  // useEffect(() => {
+
+  //   const tenantId = process.env.TENANT_ID;
+  //   console.log("tenantId:"+tenantId);
+
+  // }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,10 +31,12 @@ export default function Login() {
 
       const filteredItems = data.value.filter(
         (item) =>
-          item.fields?.UserName === email && item.fields?.Password === password
+          item.fields?.Email === email && item.fields?.Password === password
       );
 
       if (filteredItems.length == 1) {
+        console.log("UserName:"+filteredItems[0].fields?.UserName);
+        localStorage.setItem('UserName', filteredItems[0].fields?.UserName);
         router.push("/audit");
       } else {
         setError("Invalid email or password. Please try again.");
