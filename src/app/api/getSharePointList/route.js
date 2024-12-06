@@ -1,14 +1,11 @@
 import axios from "axios";
 import { NextResponse } from 'next/server';
 
-
-
 const tenantId = process.env.TENANT_ID;
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const siteId = process.env.SITE_ID;
 const listId = process.env.LIST_ID;
-
 
 async function getAccessToken() {
   const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
