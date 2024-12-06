@@ -11,7 +11,7 @@ export default function AuditTrail() {
   const [loadData, setLoadData] = useState(false);
   const [dataDropdown, setDataDropdown] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [selectedValue, setSelectedValue] = useState("");
+  const [selectedValue, setSelectedValue] = useState("Select Client");
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState("Select User");
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
@@ -32,7 +32,6 @@ export default function AuditTrail() {
     } else if (userName == selectedMember) {
       returnValue = true;
     }
-
     return returnValue;
   };
 
@@ -66,7 +65,7 @@ export default function AuditTrail() {
         if (!responseClient.ok) throw new Error(await responseClient.text());
         const dataClient = await responseClient.json();
 
-        console.log(dataClient.value);
+        //console.log(dataClient.value);
 
         const response = await fetch("/api/client");
         if (!response.ok) {
@@ -97,7 +96,7 @@ export default function AuditTrail() {
 
         setData(result);
       } catch (err) {
-        setError(err.message);
+        //setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -110,10 +109,18 @@ export default function AuditTrail() {
     setSelectedMember(event.target.value);
   };
 
+  const handleReset = () => {
+    setSelectedValue("Select Client");
+    setSelectedMember("Select User");
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedStartDate(today);
+    setSelectedEndDate(today);
+    setMembers([]);
+    setSharedData([]);
+  };
+
   const handleDownload = async (event) => {
     event.preventDefault();
-    //console.log("selectedValue"+selectedValue);
-    //console.log("selectedID"+event.target.id);
 
     try {
       const response = await fetch(
@@ -139,13 +146,19 @@ export default function AuditTrail() {
       link.click();
       link.remove();
     } catch (err) {
-      setError(err.message);
+      //setError(err.message);
       console.error("Error downloading file:", err);
     } finally {
     }
   };
 
   const handleChange = async (event) => {
+
+    if(event.target.value!="")
+    {
+      setError("");
+    }
+
     const selectedGroupId = event.target.value;
     setSelectedValue(selectedGroupId);
     setSelectedMember("Select User"); // Reset member dropdown
@@ -173,7 +186,7 @@ export default function AuditTrail() {
 
       //console.log("loadData:" + loadData);
     } catch (err) {
-      setError(err.message);
+      //setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -181,32 +194,31 @@ export default function AuditTrail() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // if (!selectedValue) {
-    //   setError('Please select a value from the clients dropdown.');
-    //   return;
-    // }
-
-    try {
-      // Fetch shared folder data for the selected group
-      const sharedDataResponse = await fetch(
-        `/api/getSharedFolder?groupId=${selectedValue}`
-      );
-      if (sharedDataResponse.ok) {
-        const sharedDataResult = await sharedDataResponse.json();
-        console.log(sharedDataResult);
-        setSharedData(sharedDataResult);
-        setLoadData(true);
+    //console.log("selectedValue:"+selectedValue);
+    if (selectedValue==="Select Client") {
+      setError("Please select a value from the clients dropdown.");
+    } else {
+      try {
+        // Fetch shared folder data for the selected group
+        const sharedDataResponse = await fetch(
+          `/api/getSharedFolder?groupId=${selectedValue}`
+        );
+        if (sharedDataResponse.ok) {
+          const sharedDataResult = await sharedDataResponse.json();
+          console.log(sharedDataResult);
+          setSharedData(sharedDataResult);
+          setLoadData(true);
+        }
+      } catch (err) {
+        //setError(err.message);
+        console.log(err.message);
       }
-    } catch (err) {
-      setError(err.message);
-      console.log(err.message);
     }
   };
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  // if (error) {
+  //   return <div>Error: {error}</div>;
+  // }
 
   if (!data) {
     return <div>Loading...</div>;
@@ -478,6 +490,7 @@ export default function AuditTrail() {
               </button>
               <button
                 type="submit"
+                onClick={handleReset}
                 className="flex w-half  justify-center rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
               >
                 Reset
@@ -550,22 +563,12 @@ export default function AuditTrail() {
                           e.target.style.color = "blue"; // Reset color when not hovered
                         }}
                       >
-                        Download File
+                        download
                       </a>
                     </td>
                   </tr>
                 ))}
               </tbody>
-
-              {/* <tbody>
-                <tr className="odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 border-b dark:border-gray-700">
-                  <td className="px-6 py-4">Silver</td>
-                  <td className="px-6 py-4">Silver</td>
-                  <td className="px-6 py-4">Laptop</td>
-                  <td className="px-6 py-4">$2999</td>
-                </tr>
-
-              </tbody> */}
             </table>
           </div>
         </main>
