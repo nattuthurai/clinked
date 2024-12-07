@@ -153,9 +153,7 @@ export default function AuditTrail() {
   };
 
   const handleChange = async (event) => {
-
-    if(event.target.value!="")
-    {
+    if (event.target.value != "") {
       setError("");
     }
 
@@ -195,7 +193,7 @@ export default function AuditTrail() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     //console.log("selectedValue:"+selectedValue);
-    if (selectedValue==="Select Client") {
+    if (selectedValue === "Select Client") {
       setError("Please select a value from the clients dropdown.");
     } else {
       try {
@@ -413,12 +411,12 @@ export default function AuditTrail() {
           <div className="bg-white p-6 rounded-md shadow-md space-y-4">
             {/* Date Range */}
             <div>
-              <div className="flex items-center space-x-4 mt-2">
+              <div className="flex items-center justify-center space-x-4 mt-2">
                 <div className="flex items-center space-x-2">
                   <label className="block text-sm font-bold pr-2">
                     Start Date :
                   </label>
-                  <div className="w-72 border px-3 text-xs py-1 mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
+                  <div className="w-64 border px-3 text-xs py-1 mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
                       selected={selectedStartDate}
                       onChange={(date) => setSelectedStartDate(date)}
@@ -429,7 +427,7 @@ export default function AuditTrail() {
                 <div className="flex items-center space-x-2">
                   <label className="block text-sm font-bold">End Date : </label>
                   {/* <div className="border border-black p-2.5 rounded-md"> */}
-                  <div className="w-72 border px-3 py-1 text-xs mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
+                  <div className="w-64 border px-3 py-1 text-xs mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
                       selected={selectedEndDate}
                       onChange={(date) => setSelectedEndDate(date)}
@@ -439,7 +437,7 @@ export default function AuditTrail() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4 mt-2">
+            <div className="flex items-center space-x-4 mt-2 justify-center">
               <div className="flex items-center space-x-4 mt-2">
                 <label className="block text-sm font-bold">Clients :</label>{" "}
                 &nbsp; &nbsp;&nbsp;
@@ -447,7 +445,7 @@ export default function AuditTrail() {
                   id="dropdown"
                   value={selectedValue}
                   onChange={handleChange}
-                  className="w-72 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
+                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
                 >
                   <option value="">Select Client</option>
                   {dataDropdown.map((item) => (
@@ -464,7 +462,7 @@ export default function AuditTrail() {
                   id="dropdown"
                   value={selectedMember}
                   onChange={handleChangeUser}
-                  className="w-72 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
                 >
                   <option value="">Select User</option>
                   {members.map((member) => (
@@ -478,20 +476,20 @@ export default function AuditTrail() {
             <div className="flex items-center space-x-4 mt-2">
               {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
-            <div className="flex items-center space-x-4 mt-2 ml-20">
+
+            <div className="flex items-center space-x-4 mt-2 ml-20 justify-center ">
               {" "}
-              &nbsp;&nbsp;&nbsp;
               <button
                 type="submit"
                 onClick={handleSubmit}
-                className="flex w-half  justify-center rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
+                className="flex w-half   rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
               >
                 Show result
               </button>
               <button
                 type="submit"
                 onClick={handleReset}
-                className="flex w-half  justify-center rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
+                className="flex w-half   rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
               >
                 Reset
               </button>
