@@ -259,7 +259,7 @@ export default function AuditTrail() {
       {/* Main content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className=" bg-gray-200 border-r w-64  ">
+        {/* <aside className=" bg-gray-200 border-r w-64  ">
           <ul className="space-y-4 py-6 px-4 ">
             <li className="flex items-center space-x-2 ">
               <span>
@@ -405,7 +405,7 @@ export default function AuditTrail() {
               <span>Audit Trail</span>
             </li>
           </ul>
-        </aside>
+        </aside> */}
 
         {/* Main Section */}
         <main className="flex-1 p-6">
@@ -416,7 +416,7 @@ export default function AuditTrail() {
               <div className="flex items-center space-x-4 mt-2">
                 <div className="flex items-center space-x-2">
                   <label className="block text-sm font-bold pr-2">
-                    StartDate :
+                    Start Date :
                   </label>
                   <div className="w-72 border px-3 text-xs py-1 mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
@@ -427,7 +427,7 @@ export default function AuditTrail() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <label className="block text-sm font-bold">EndDate : </label>
+                  <label className="block text-sm font-bold">End Date : </label>
                   {/* <div className="border border-black p-2.5 rounded-md"> */}
                   <div className="w-72 border px-3 py-1 text-xs mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
