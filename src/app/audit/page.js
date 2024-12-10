@@ -10,8 +10,36 @@ export default function AuditTrail() {
   const [loading, setLoading] = useState(false);
   const [loadData, setLoadData] = useState(false);
   const [dataDropdown, setDataDropdown] = useState([]);
+
+  const [dataClientMapping, setDataClientMapping] = useState([]);
+  const [dataClientName, setDataClientName] = useState([]);
+
+  const [dataDropdownTaxPreparer, setDataDropdownTaxPreparer] = useState([]);
+  const [dataDropdownTaxReviewer, setDataDropdownTaxReviewer] = useState([]);
+  const [dataDropdownAccountManager, setDataDropdownAccountManager] = useState(
+    []
+  );
+  const [
+    dataDropdownAccountRepresentative,
+    setDataDropdownAccountRepresentative,
+  ] = useState([]);
+
   const [selectedOption, setSelectedOption] = useState(null);
+
   const [selectedValue, setSelectedValue] = useState("Select Client");
+  const [selectedValueTaxPreparer, setSelectedValueTaxPreparer] = useState(
+    "Select Tax Preparer"
+  );
+  const [selectedValueTaxReviewer, setSelectedValueTaxReviewer] = useState(
+    "Select Tax Reviewer"
+  );
+  const [selectedValueAccountManager, setSelectedValueAccountManager] =
+    useState("Select Account Manager");
+  const [
+    selectedValueAccountRepresentative,
+    setSelectedValueAccountRepresentative,
+  ] = useState("Select Account Representative");
+
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState("Select User");
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
@@ -53,13 +81,6 @@ export default function AuditTrail() {
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
-  // const convertToTimestamp = (dateStr) => {
-  //   const [datePart, timePart] = dateStr.split(" ");
-  //   const [year, month, day] = datePart.split("-").map(Number);
-  //   const [hours, minutes, seconds] = timePart.split(".").map(Number);
-  //   return new Date(year, month - 1, day, hours, minutes, seconds).getTime();
-  // };
-
   const convertToTimestamp = (dateStr) => {
     try {
       const date = new Date(dateStr); // Parse the date string
@@ -73,6 +94,19 @@ export default function AuditTrail() {
     }
   };
 
+  const addUniqueDropdown = (dropdown, inc, item) => {
+    const newEntry = { value: inc, label: item };
+
+    // Check if the entry already exists in the array
+    const exists = dropdown.some((entry) => entry.label === newEntry.label);
+
+    if (!exists) {
+      dropdown.push(newEntry);
+    }
+
+    return dropdown;
+  };
+
   let filterItems = (mainData, name, stDate, endDate) => {
     return mainData.items.filter((item) => {
       const nameMatches = name ? item.uploaded.name === name : true;
@@ -84,31 +118,54 @@ export default function AuditTrail() {
     });
   };
 
-  /*const filterItems = (data, uploadedName, startDate, endDate) => {
-    return data.items.filter((item) => {
-      const isNameMatch = item.uploaded.name === uploadedName;
-      //const isDateInRange = item.lastModified >= startDate && item.lastModified <= endDate;
-      //return isNameMatch && isDateInRange;
-      return isNameMatch;
+  useEffect(() => {
+    //console.log("selectedValueTaxPreparer:" + selectedValueTaxPreparer);
+
+    const filteredItems = dataClientMapping.filter((item) => {
+      return (
+        item.TaxPreparer.toLowerCase().includes(
+          selectedValueTaxPreparer.toLowerCase()
+        ) &&
+        item.TaxReviewer.toLowerCase().includes(
+          selectedValueTaxReviewer.toLowerCase()
+        ) &&
+        item.AccountManager.toLowerCase().includes(
+          selectedValueAccountManager.toLowerCase()
+        ) &&
+        item.AccountRepresentative.toLowerCase().includes(
+          selectedValueAccountRepresentative.toLowerCase()
+        )
+      );
     });
-  };*/
 
-  /*useEffect(() => {
-    let strStartDate = selectedStartDate + " 00.00.00";
-    let strEndDate = selectedEndDate + " 00.00.00";
+    // filteredItems.forEach((item) => {
+    //   console.log(
+    //     `TaxPreparer: ${item.TaxPreparer}, TaxReviewer: ${item.TaxReviewer}, AccountManager: ${item.AccountManager}, AccountRepresentative: ${item.AccountRepresentative}, ClientName: ${item.ClientName}`
+    //   );
+    // });
 
-    const startDate = convertToTimestamp(strStartDate);
-    const endDate = convertToTimestamp(strEndDate);
+    const dropdownData = [];
+    dataClientName.forEach((item) => {
 
-    const filteredItems = filterItems(
-      sharedData,
-      selectedMember,
-      startDate,
-      endDate
-    );
-    setSharedData(filteredItems);
-    //console.log(filteredItems);
-  }, []);*/
+      const filteredDataItems = filteredItems.filter(
+        (itemClient) =>
+          itemClient.ClientName === item.friendlyName
+      );
+
+      if (filteredDataItems.length == 1) {
+      console.log(item.friendlyName.trim());
+      dropdownData.push({ value: item.id, label: item.friendlyName });
+      }
+    });
+
+    setDataDropdown(dropdownData);
+
+  }, [
+    selectedValueTaxPreparer,
+    selectedValueTaxReviewer,
+    selectedValueAccountManager,
+    selectedValueAccountRepresentative,
+  ]);
 
   useEffect(() => {
     // Fetch initial dropdown data
@@ -121,7 +178,6 @@ export default function AuditTrail() {
         const responseClient = await fetch(`/api/getSharePointClientName`);
         if (!responseClient.ok) throw new Error(await responseClient.text());
         const dataClient = await responseClient.json();
-
         //console.log(dataClient.value);
 
         const response = await fetch("/api/client");
@@ -130,26 +186,87 @@ export default function AuditTrail() {
         }
         const result = await response.json();
 
+        setDataClientName(result);
+
         // setDataDropdown(
         //   result.map((item) => ({ value: item.id, label: item.friendlyName }))
         // );
+
+        const dropdownDataTaxPreparer = [];
+        const dropdownDataTaxReviewer = [];
+        const dropdownDataAccountManager = [];
+        const dropdownDataAccountRepresentative = [];
+
+        const ConstructClientMapping = [];
+
+        let inc = 1;
+        dataClient.value.forEach((item) => {
+          //dropdownDataTaxPreparer.push({ value: inc, label: item.fields?.TaxPreparer });
+          //dropdownDataTaxReviewer.push({ value: inc, label: item.fields?.TaxReviewer });
+          //dropdownDataAccountManager.push({ value: inc, label: item.fields?.AccountManager });
+          //dropdownDataAccountRepresentative.push({ value: inc, label: item.fields?.AccountRepresentative });
+
+          addUniqueDropdown(
+            dropdownDataTaxPreparer,
+            inc,
+            item.fields?.TaxPreparer
+          );
+          addUniqueDropdown(
+            dropdownDataTaxReviewer,
+            inc,
+            item.fields?.TaxReviewer
+          );
+          addUniqueDropdown(
+            dropdownDataAccountManager,
+            inc,
+            item.fields?.AccountManager
+          );
+          addUniqueDropdown(
+            dropdownDataAccountRepresentative,
+            inc,
+            item.fields?.AccountRepresentative
+          );
+          inc++;
+
+          ConstructClientMapping.push({
+            ClientName: item.fields?.ClientName,
+            AccountManager: item.fields?.AccountManager,
+            AccountRepresentative: item.fields?.AccountRepresentative,
+            TaxPreparer: item.fields?.TaxPreparer,
+            TaxReviewer: item.fields?.TaxReviewer,
+          });
+        });
+
+        setDataClientMapping(ConstructClientMapping);
+
+        //console.log("DataClientMapping" + dataClientMapping);
+
+        //console.log(dropdownDataTaxPreparer);
+        //console.log(dropdownDataTaxReviewer);
+        //console.log(dropdownDataAccountManager);
+        //console.log(dropdownDataAccountRepresentative);
 
         const dropdownData = [];
         result.forEach((item) => {
           //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
 
-          const filteredItems = dataClient.value.filter(
-            (itemClient) =>
-              itemClient.fields?.TaxAssessorName === storedName &&
-              itemClient.fields?.ClientName === item.friendlyName
-          );
+          // const filteredItems = dataClient.value.filter(
+          //   (itemClient) =>
+          //     itemClient.fields?.TaxAssessorName === storedName &&
+          //     itemClient.fields?.ClientName === item.friendlyName
+          // );
 
           //if (filteredItems.length == 1) {
-          dropdownData.push({ value: item.id, label: item.friendlyName });
+          //console.log(item.friendlyName.trim());
+          //dropdownData.push({ value: item.id, label: item.friendlyName });
           //}
         });
 
         setDataDropdown(dropdownData);
+        setDataDropdownTaxPreparer(dropdownDataTaxPreparer);
+        setDataDropdownTaxReviewer(dropdownDataTaxReviewer);
+        setDataDropdownAccountManager(dropdownDataAccountManager);
+        setDataDropdownAccountRepresentative(dropdownDataAccountRepresentative);
 
         setData(result);
       } catch (err) {
@@ -164,6 +281,26 @@ export default function AuditTrail() {
 
   const handleChangeUser = (event) => {
     setSelectedMember(event.target.value);
+  };
+
+  const handleChange1 = (event) => {
+    event.preventDefault();
+    setSelectedValueTaxPreparer(event.target.value);
+  };
+
+  const handleChange2 = (event) => {
+    event.preventDefault();
+    setSelectedValueTaxReviewer(event.target.value);
+  };
+
+  const handleChange3 = (event) => {
+    event.preventDefault();
+    setSelectedValueAccountManager(event.target.value);
+  };
+
+  const handleChange4 = (event) => {
+    event.preventDefault();
+    setSelectedValueAccountRepresentative(event.target.value);
   };
 
   const handleReset = () => {
@@ -500,7 +637,9 @@ export default function AuditTrail() {
 
         {/* Main Section */}
         <main className="flex-1 p-6">
-          <h2 className="text-lg font-semibold mb-4">Audit Trail</h2>
+          <div className="flex items-center justify-center space-x-1 mt-1">
+            <h2 className="text-lg font-semibold mb-4">Audit Trail Report</h2>
+          </div>
           <div className="bg-white p-6 rounded-md shadow-md space-y-4">
             {/* Date Range */}
             <div>
@@ -530,6 +669,93 @@ export default function AuditTrail() {
                 </div>
               </div>
             </div>
+
+            <div className="flex items-center space-x-4 mt-2 justify-center">
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="block text-sm font-bold">
+                  Tax Preparer :
+                </label>{" "}
+                &nbsp; &nbsp;&nbsp;
+                <select
+                  id="dropdownTaxPreparer"
+                  value={selectedValueTaxPreparer}
+                  onChange={handleChange1}
+                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
+                >
+                  <option value="">Select Tax Preparer</option>
+                  {Array.isArray(dataDropdownTaxPreparer) &&
+                    dataDropdownTaxPreparer.map((item) => (
+                      <option key={item.label} value={item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="block text-sm font-bold pr-2">
+                  Tax Reviewer :
+                </label>
+                <select
+                  id="dropdownTaxReviewer"
+                  value={selectedValueTaxReviewer}
+                  onChange={handleChange2}
+                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                >
+                  <option value="">Select Tax Reviewer</option>
+                  {Array.isArray(dataDropdownTaxReviewer) &&
+                    dataDropdownTaxReviewer.map((item) => (
+                      <option key={item.label} value={item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4 mt-2 justify-center">
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="block text-sm font-bold">
+                  Account Manager :
+                </label>{" "}
+                &nbsp; &nbsp;&nbsp;
+                <select
+                  id="dropdownAccountManager"
+                  value={selectedValueAccountManager}
+                  onChange={handleChange3}
+                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
+                >
+                  <option value="">Select Account Manager</option>
+                  {Array.isArray(dataDropdownAccountManager) &&
+                    dataDropdownAccountManager.map((item) => (
+                      <option key={item.label} value={item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="block text-sm font-bold pr-2">
+                  Account Representative :
+                </label>
+                <select
+                  id="dropdown"
+                  value={selectedValueAccountRepresentative}
+                  onChange={handleChange4}
+                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                >
+                  <option value="">Select Account Representative</option>
+                  {Array.isArray(dataDropdownAccountRepresentative) &&
+                    dataDropdownAccountRepresentative.map((item) => (
+                      <option key={item.label} value={item.label}>
+                        {item.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
             <div className="flex items-center space-x-4 mt-2 justify-center">
               <div className="flex items-center space-x-4 mt-2">
                 <label className="block text-sm font-bold">Clients :</label>{" "}
@@ -613,50 +839,51 @@ export default function AuditTrail() {
 
               <tbody>
                 {/* {sharedData?.items?.map((item) => ( */}
-                  {sharedData?.map((item) => (
-                  <tr
-                    key={item.id}
-                    style={{
-                      backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
-                      border: "1px solid #ddd",
-                    }}
-                  >
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {item.friendlyName || "N/A"}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {formatSize(item.size) || "N/A"}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {item.uploaded?.name || "Unknown"}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {formatDate(item.lastModified)}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {/* <a onClick={handleDownload} id={item.id}>
+                {sharedData &&
+                  sharedData?.map((item) => (
+                    <tr
+                      key={item.id}
+                      style={{
+                        backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
+                        border: "1px solid #ddd",
+                      }}
+                    >
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {item.friendlyName || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {formatSize(item.size) || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {item.uploaded?.name || "Unknown"}
+                      </td>
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {formatDate(item.lastModified)}
+                      </td>
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {/* <a onClick={handleDownload} id={item.id}>
                         Download
                       </a> */}
-                      <a
-                        onClick={handleDownload}
-                        id={item.id}
-                        style={{
-                          color: "blue", // Link color
-                          textDecoration: "underline", // Underline to mimic traditional links
-                          cursor: "pointer", // Hand icon for click
-                        }}
-                        onMouseOver={(e) => {
-                          e.target.style.color = "darkblue"; // Change color on hover
-                        }}
-                        onMouseOut={(e) => {
-                          e.target.style.color = "blue"; // Reset color when not hovered
-                        }}
-                      >
-                        download
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                        <a
+                          onClick={handleDownload}
+                          id={item.id}
+                          style={{
+                            color: "blue", // Link color
+                            textDecoration: "underline", // Underline to mimic traditional links
+                            cursor: "pointer", // Hand icon for click
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.color = "darkblue"; // Change color on hover
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.color = "blue"; // Reset color when not hovered
+                          }}
+                        >
+                          download
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

@@ -47,9 +47,8 @@ export async function GET(req) {
       }
   
       // Graph API endpoint for SharePoint list items
-      const graphEndpoint = `https://graph.microsoft.com/v1.0/sites/root/lists/${listId}/items?$expand=fields($select=TaxAssessorName,ClientName)`;
+      const graphEndpoint = `https://graph.microsoft.com/v1.0/sites/root/lists/${listId}/items?$expand=fields($select=ClientName,TaxPreparer,TaxReviewer,AccountManager,AccountRepresentative)`;
       
-  
       // Fetch data from Graph API
       const response = await axios.get(graphEndpoint, {
         headers: {
