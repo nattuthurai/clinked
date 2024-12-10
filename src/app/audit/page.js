@@ -53,6 +53,63 @@ export default function AuditTrail() {
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
+  // const convertToTimestamp = (dateStr) => {
+  //   const [datePart, timePart] = dateStr.split(" ");
+  //   const [year, month, day] = datePart.split("-").map(Number);
+  //   const [hours, minutes, seconds] = timePart.split(".").map(Number);
+  //   return new Date(year, month - 1, day, hours, minutes, seconds).getTime();
+  // };
+
+  const convertToTimestamp = (dateStr) => {
+    try {
+      const date = new Date(dateStr); // Parse the date string
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid date format");
+      }
+      return date.getTime(); // Get the timestamp in milliseconds
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  };
+
+  let filterItems = (mainData, name, stDate, endDate) => {
+    return mainData.items.filter((item) => {
+      const nameMatches = name ? item.uploaded.name === name : true;
+      const dateMatches =
+        stDate && endDate
+          ? stDate < item.lastModified && endDate > item.lastModified
+          : true;
+      return nameMatches && dateMatches;
+    });
+  };
+
+  /*const filterItems = (data, uploadedName, startDate, endDate) => {
+    return data.items.filter((item) => {
+      const isNameMatch = item.uploaded.name === uploadedName;
+      //const isDateInRange = item.lastModified >= startDate && item.lastModified <= endDate;
+      //return isNameMatch && isDateInRange;
+      return isNameMatch;
+    });
+  };*/
+
+  /*useEffect(() => {
+    let strStartDate = selectedStartDate + " 00.00.00";
+    let strEndDate = selectedEndDate + " 00.00.00";
+
+    const startDate = convertToTimestamp(strStartDate);
+    const endDate = convertToTimestamp(strEndDate);
+
+    const filteredItems = filterItems(
+      sharedData,
+      selectedMember,
+      startDate,
+      endDate
+    );
+    setSharedData(filteredItems);
+    //console.log(filteredItems);
+  }, []);*/
+
   useEffect(() => {
     // Fetch initial dropdown data
     const fetchData = async () => {
@@ -87,9 +144,9 @@ export default function AuditTrail() {
               itemClient.fields?.ClientName === item.friendlyName
           );
 
-          if (filteredItems.length == 1) {
-            dropdownData.push({ value: item.id, label: item.friendlyName });
-          }
+          //if (filteredItems.length == 1) {
+          dropdownData.push({ value: item.id, label: item.friendlyName });
+          //}
         });
 
         setDataDropdown(dropdownData);
@@ -198,13 +255,49 @@ export default function AuditTrail() {
     } else {
       try {
         // Fetch shared folder data for the selected group
+
+        //console.log("selectedValue:" + selectedValue);
+
         const sharedDataResponse = await fetch(
           `/api/getSharedFolder?groupId=${selectedValue}`
         );
         if (sharedDataResponse.ok) {
           const sharedDataResult = await sharedDataResponse.json();
-          console.log(sharedDataResult);
-          setSharedData(sharedDataResult);
+          //console.log("sharedDataResult:");
+          //setSharedData(sharedDataResult);
+
+          //------------------------------------------------------------------------------------------------------
+          let strStartDate = selectedStartDate;
+          let strEndDate = selectedEndDate;
+          let memeberName = null;
+
+          //console.log("strStartDate:" + strStartDate);
+          //console.log("strEndDate:" + strEndDate);
+
+          const startDate = convertToTimestamp(strStartDate);
+          const endDate = convertToTimestamp(strEndDate);
+
+          //console.log("startDate:" + startDate);
+          //console.log("endDate:" + endDate);
+
+          //console.log("selectedMember" + selectedMember);
+
+          if (selectedMember != "Select User") {
+            memeberName = selectedMember;
+          }
+
+          const filteredItems = filterItems(
+            sharedDataResult,
+            memeberName,
+            startDate,
+            endDate
+          );
+
+          //console.log(filteredItems);
+
+          setSharedData(filteredItems);
+          //------------------------------------------------------------------------------------------------------
+
           setLoadData(true);
         }
       } catch (err) {
@@ -519,15 +612,13 @@ export default function AuditTrail() {
               </thead>
 
               <tbody>
-                {sharedData?.items?.map((item) => (
+                {/* {sharedData?.items?.map((item) => ( */}
+                  {sharedData?.map((item) => (
                   <tr
                     key={item.id}
                     style={{
                       backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
                       border: "1px solid #ddd",
-                      //display:isWithinRange(item.lastModified,selectedStartDate,selectedEndDate)==true?"table-row":"none" || isUploadedBy(item.uploaded?.name) == true? "table-row": "none",
-                      //display:isWithinRange(item.lastModified,selectedStartDate,selectedEndDate)==true?"table-row":"none",
-                      //display:isUploadedBy(item.uploaded?.name) == true? "table-row": "none",
                     }}
                   >
                     <td style={{ padding: "10px", border: "1px solid #ddd" }}>

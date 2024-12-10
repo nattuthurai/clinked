@@ -43,6 +43,7 @@ export async function GET(request) {
 
     // Fetch data from the second API
     const secondApiUrl = `https://api.clinked.app/v3/groups/${groupId}/filesList?parent=${folderId}`;
+    console.log("secondApiUrl:"+secondApiUrl);
     const secondResponse = await fetch(secondApiUrl, { headers: baseHeaders });
     if (!secondResponse.ok) {
       throw new Error(

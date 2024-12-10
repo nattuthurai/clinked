@@ -34,7 +34,7 @@ export default function Login() {
       );
 
       if (filteredItems.length == 1) {
-        console.log("UserName:"+filteredItems[0].fields?.UserName);
+        //console.log("UserName:"+filteredItems[0].fields?.UserName);
         localStorage.setItem('UserName', filteredItems[0].fields?.UserName);
         router.push("/audit");
       } else {
