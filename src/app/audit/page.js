@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Image from "next/image";
 
 export default function AuditTrail() {
   const [data, setData] = useState(null);
@@ -146,20 +147,17 @@ export default function AuditTrail() {
 
     const dropdownData = [];
     dataClientName.forEach((item) => {
-
       const filteredDataItems = filteredItems.filter(
-        (itemClient) =>
-          itemClient.ClientName === item.friendlyName
+        (itemClient) => itemClient.ClientName === item.friendlyName
       );
 
       if (filteredDataItems.length == 1) {
-      console.log(item.friendlyName.trim());
-      dropdownData.push({ value: item.id, label: item.friendlyName });
+        //console.log(item.friendlyName.trim());
+        dropdownData.push({ value: item.id, label: item.friendlyName });
       }
     });
 
     setDataDropdown(dropdownData);
-
   }, [
     selectedValueTaxPreparer,
     selectedValueTaxReviewer,
@@ -249,13 +247,11 @@ export default function AuditTrail() {
         const dropdownData = [];
         result.forEach((item) => {
           //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
-
           // const filteredItems = dataClient.value.filter(
           //   (itemClient) =>
           //     itemClient.fields?.TaxAssessorName === storedName &&
           //     itemClient.fields?.ClientName === item.friendlyName
           // );
-
           //if (filteredItems.length == 1) {
           //console.log(item.friendlyName.trim());
           //dropdownData.push({ value: item.id, label: item.friendlyName });
@@ -861,9 +857,6 @@ export default function AuditTrail() {
                         {formatDate(item.lastModified)}
                       </td>
                       <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {/* <a onClick={handleDownload} id={item.id}>
-                        Download
-                      </a> */}
                         <a
                           onClick={handleDownload}
                           id={item.id}
@@ -879,7 +872,14 @@ export default function AuditTrail() {
                             e.target.style.color = "blue"; // Reset color when not hovered
                           }}
                         >
-                          download
+                           <Image
+                            src="/download.png" 
+                            alt="Download Icon"
+                            width={24} 
+                            height={24} 
+                            id={item.id}
+                            onClick={handleDownload}
+                          /> 
                         </a>
                       </td>
                     </tr>
