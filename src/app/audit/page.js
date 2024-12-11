@@ -822,6 +822,9 @@ export default function AuditTrail() {
               <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                   <th scope="col" className="px-6 py-3">
+                    #
+                  </th>
+                  <th scope="col" className="px-6 py-3">
                     File Name
                   </th>
                   <th scope="col" className="px-6 py-3">
@@ -842,7 +845,7 @@ export default function AuditTrail() {
               <tbody>
                 {/* {sharedData?.items?.map((item) => ( */}
                 {sharedData &&
-                  sharedData?.map((item) => (
+                  sharedData?.map((item, index) => (
                     <tr
                       key={item.id}
                       style={{
@@ -850,6 +853,9 @@ export default function AuditTrail() {
                         border: "1px solid #ddd",
                       }}
                     >
+                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                        {index + 1}
+                      </td>
                       <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                         {item.friendlyName || "N/A"}
                       </td>
@@ -862,34 +868,18 @@ export default function AuditTrail() {
                       <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                         {formatDate(item.lastModified)}
                       </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {/* <a
-                          onClick={handleDownload}
+                      <td style={{ padding: "10px", border: "1px solid #ddd",display:"flex",justifyContent:"center" }}>
+                        <Image
+                          src="/download.png"
+                          alt="Download"
+                          width={24}
+                          height={24}
                           id={item.id}
+                          onClick={handleDownload}
                           style={{
-                            color: "blue", // Link color
-                            textDecoration: "underline", // Underline to mimic traditional links
-                            cursor: "pointer", // Hand icon for click
+                            cursor: "pointer",
                           }}
-                          onMouseOver={(e) => {
-                            e.target.style.color = "darkblue"; // Change color on hover
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.color = "blue"; // Reset color when not hovered
-                          }}
-                        ></a> */}
-                           <Image
-                            src="/download.png" 
-                            alt="Download Icon"
-                            width={24} 
-                            height={24} 
-                            id={item.id}
-                            onClick={handleDownload}
-                            style={{
-                              cursor: "pointer"
-                            }}
-                          /> 
-                        
+                        />
                       </td>
                     </tr>
                   ))}
