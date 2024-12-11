@@ -11,11 +11,21 @@ export default function Login() {
 
 
 
-  // useEffect(() => {
+   useEffect(() => {
 
+    const tenantId = process.env.TENANT_ID;
+    const clientId = process.env.CLIENT_ID;
+    const clientSecret = process.env.CLIENT_SECRET;
+    const siteId = process.env.SITE_ID;
+    const listId = process.env.LIST_CLIENTMAPPING_ID;
 
+    console.log("tenantId:"+tenantId);
+    console.log("clientId:"+clientId);
+    console.log("clientSecret:"+clientSecret);
+    console.log("siteId:"+siteId);
+    console.log("listId:"+listId);
 
-  // }, []);
+   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
