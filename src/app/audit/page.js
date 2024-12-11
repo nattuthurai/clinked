@@ -302,6 +302,12 @@ export default function AuditTrail() {
   const handleReset = () => {
     setSelectedValue("Select Client");
     setSelectedMember("Select User");
+
+    setSelectedValueTaxPreparer("Select Tax Preparer");
+    setSelectedValueTaxReviewer("Select Tax Reviewer");
+    setSelectedValueAccountManager("Select Account Manager");
+    setSelectedValueAccountRepresentative("Select Account Representative");
+
     const today = new Date().toISOString().split("T")[0];
     setSelectedStartDate(today);
     setSelectedEndDate(today);
@@ -857,7 +863,7 @@ export default function AuditTrail() {
                         {formatDate(item.lastModified)}
                       </td>
                       <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        <a
+                        {/* <a
                           onClick={handleDownload}
                           id={item.id}
                           style={{
@@ -871,7 +877,7 @@ export default function AuditTrail() {
                           onMouseOut={(e) => {
                             e.target.style.color = "blue"; // Reset color when not hovered
                           }}
-                        >
+                        ></a> */}
                            <Image
                             src="/download.png" 
                             alt="Download Icon"
@@ -879,8 +885,11 @@ export default function AuditTrail() {
                             height={24} 
                             id={item.id}
                             onClick={handleDownload}
+                            style={{
+                              cursor: "pointer"
+                            }}
                           /> 
-                        </a>
+                        
                       </td>
                     </tr>
                   ))}
