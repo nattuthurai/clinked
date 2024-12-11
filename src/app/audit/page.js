@@ -843,7 +843,6 @@ export default function AuditTrail() {
               </thead>
 
               <tbody>
-                {/* {sharedData?.items?.map((item) => ( */}
                 {sharedData &&
                   sharedData?.map((item, index) => (
                     <tr
