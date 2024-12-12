@@ -638,19 +638,20 @@ export default function AuditTrail() {
         </aside> */}
 
         {/* Main Section */}
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-center space-x-1 mt-1">
-            <h2 className="text-lg font-semibold mb-4">Audit Trail Report</h2>
-          </div>
-          <div className="bg-white p-6 rounded-md shadow-md space-y-4">
-            {/* Date Range */}
-            <div>
-              <div className="flex items-center justify-center space-x-4 mt-2">
-                <div className="flex items-center space-x-2">
-                  <label className="block text-sm font-bold pr-2">
+        <main className="flex-1 ">
+          <div className="min-h-screen flex items-center mb-0 justify-center -mt-8">
+            <div className="bg-white p-6 rounded-lg shadow-2xl w-full max-w-4xl space-y-4">
+              <h2 className="text-2xl  font-bold mb-4 text-center">
+                Audit Trail Report
+              </h2>
+
+              {/* Date Range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
                     Start Date :
                   </label>
-                  <div className="w-64 border px-3 text-xs py-1 mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
+                  <div className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
                       selected={selectedStartDate}
                       onChange={(date) => setSelectedStartDate(date)}
@@ -658,10 +659,12 @@ export default function AuditTrail() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="block text-sm font-bold">End Date : </label>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    End Date :{" "}
+                  </label>
                   {/* <div className="border border-black p-2.5 rounded-md"> */}
-                  <div className="w-64 border px-3 py-1 text-xs mt-2 rounded-md focus:outline-none focus:ring focus:ring-blue-300">
+                  <div className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
                       selected={selectedEndDate}
                       onChange={(date) => setSelectedEndDate(date)}
@@ -669,156 +672,151 @@ export default function AuditTrail() {
                     />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-4 mt-2 justify-center">
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold">
-                  Tax Preparer :
-                </label>{" "}
-                &nbsp; &nbsp;&nbsp;
-                <select
-                  id="dropdownTaxPreparer"
-                  value={selectedValueTaxPreparer}
-                  onChange={handleChange1}
-                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
-                >
-                  <option value="">Select Tax Preparer</option>
-                  {Array.isArray(dataDropdownTaxPreparer) &&
-                    dataDropdownTaxPreparer.map((item) => (
-                      <option key={item.label} value={item.label}>
+                <div>
+                  <label className="block text-sm font-bold pr-2">
+                    Tax Preparer :
+                  </label>{" "}
+                  <select
+                    id="dropdownTaxPreparer"
+                    value={selectedValueTaxPreparer}
+                    onChange={handleChange1}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select Tax Preparer</option>
+                    {Array.isArray(dataDropdownTaxPreparer) &&
+                      dataDropdownTaxPreparer.map((item) => (
+                        <option key={item.label} value={item.label}>
+                          {item.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold pr-2">
+                    Tax Reviewer :
+                  </label>
+                  <select
+                    id="dropdownTaxReviewer"
+                    value={selectedValueTaxReviewer}
+                    onChange={handleChange2}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select Tax Reviewer</option>
+                    {Array.isArray(dataDropdownTaxReviewer) &&
+                      dataDropdownTaxReviewer.map((item) => (
+                        <option key={item.label} value={item.label}>
+                          {item.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Account Manager :
+                  </label>{" "}
+                  <select
+                    id="dropdownAccountManager"
+                    value={selectedValueAccountManager}
+                    onChange={handleChange3}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select Account Manager</option>
+                    {Array.isArray(dataDropdownAccountManager) &&
+                      dataDropdownAccountManager.map((item) => (
+                        <option key={item.label} value={item.label}>
+                          {item.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Account Representative :
+                  </label>
+                  <select
+                    id="dropdown"
+                    value={selectedValueAccountRepresentative}
+                    onChange={handleChange4}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select Account Representative</option>
+                    {Array.isArray(dataDropdownAccountRepresentative) &&
+                      dataDropdownAccountRepresentative.map((item) => (
+                        <option key={item.label} value={item.label}>
+                          {item.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Clients :
+                  </label>{" "}
+                  <select
+                    id="dropdown"
+                    value={selectedValue}
+                    onChange={handleChange}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select Client</option>
+                    {dataDropdown.map((item) => (
+                      <option key={item.value} value={item.value}>
                         {item.label}
                       </option>
                     ))}
-                </select>
-              </div>
+                  </select>
+                </div>
 
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold pr-2">
-                  Tax Reviewer :
-                </label>
-                <select
-                  id="dropdownTaxReviewer"
-                  value={selectedValueTaxReviewer}
-                  onChange={handleChange2}
-                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-                >
-                  <option value="">Select Tax Reviewer</option>
-                  {Array.isArray(dataDropdownTaxReviewer) &&
-                    dataDropdownTaxReviewer.map((item) => (
-                      <option key={item.label} value={item.label}>
-                        {item.label}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Users :
+                  </label>
+                  <select
+                    id="dropdown"
+                    value={selectedMember}
+                    onChange={handleChangeUser}
+                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+                  >
+                    <option value="">Select User</option>
+                    {members.map((member) => (
+                      <option key={member.id} value={member.name}>
+                        {member.name}
                       </option>
                     ))}
-                </select>
-              </div>
-            </div>
+                  </select>
+                </div>
 
-            <div className="flex items-center space-x-4 mt-2 justify-center">
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold">
-                  Account Manager :
-                </label>{" "}
-                &nbsp; &nbsp;&nbsp;
-                <select
-                  id="dropdownAccountManager"
-                  value={selectedValueAccountManager}
-                  onChange={handleChange3}
-                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
+                <div className="flex items-center space-x-4 mt-2">
+                  {error && <p style={{ color: "red" }}>{error}</p>}
+                </div>
+              </div>
+              <div className="flex justify-between mt-6">
+                {" "}
+                <button
+                  type="submit"
+                  onClick={handleSubmit}
+                  className="w-1/2 bg-pink-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-700 mr-2"
                 >
-                  <option value="">Select Account Manager</option>
-                  {Array.isArray(dataDropdownAccountManager) &&
-                    dataDropdownAccountManager.map((item) => (
-                      <option key={item.label} value={item.label}>
-                        {item.label}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold pr-2">
-                  Account Representative :
-                </label>
-                <select
-                  id="dropdown"
-                  value={selectedValueAccountRepresentative}
-                  onChange={handleChange4}
-                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+                  Show result
+                </button>
+                <button
+                  type="submit"
+                  onClick={handleReset}
+                  className="w-1/2 bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 ml-2"
                 >
-                  <option value="">Select Account Representative</option>
-                  {Array.isArray(dataDropdownAccountRepresentative) &&
-                    dataDropdownAccountRepresentative.map((item) => (
-                      <option key={item.label} value={item.label}>
-                        {item.label}
-                      </option>
-                    ))}
-                </select>
+                  Reset
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center space-x-4 mt-2 justify-center">
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold">Clients :</label>{" "}
-                &nbsp; &nbsp;&nbsp;
-                <select
-                  id="dropdown"
-                  value={selectedValue}
-                  onChange={handleChange}
-                  className="w-64 border px-3 py-1 mt-2 rounded-md text-xs focus:outline-none focus:ring focus:ring-blue-300"
-                >
-                  <option value="">Select Client</option>
-                  {dataDropdown.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-4 mt-2">
-                <label className="block text-sm font-bold pr-2">Users :</label>
-                <select
-                  id="dropdown"
-                  value={selectedMember}
-                  onChange={handleChangeUser}
-                  className="w-64 border px-3 py-1 text-xs  mt-2  rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-                >
-                  <option value="">Select User</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={member.name}>
-                      {member.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4 mt-2">
-              {error && <p style={{ color: "red" }}>{error}</p>}
-            </div>
-
-            <div className="flex items-center space-x-4 mt-2 ml-20 justify-center ">
-              {" "}
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                className="flex w-half   rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
-              >
-                Show result
-              </button>
-              <button
-                type="submit"
-                onClick={handleReset}
-                className="flex w-half   rounded-md bg-pink-900	 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-pink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700"
-              >
-                Reset
-              </button>
             </div>
           </div>
-          <br />
-          <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+
+          <div className="max-w-[90%] mx-auto overflow-x-auto rounded-lg ">
+            <table className="min-w-full border-collapse border border-gray-200">
               <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                   <th scope="col" className="px-6 py-3">
@@ -867,7 +865,14 @@ export default function AuditTrail() {
                       <td style={{ padding: "10px", border: "1px solid #ddd" }}>
                         {formatDate(item.lastModified)}
                       </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd",display:"flex",justifyContent:"center" }}>
+                      <td
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
                         <Image
                           src="/download.png"
                           alt="Download"
