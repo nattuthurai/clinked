@@ -186,9 +186,9 @@ export default function AuditTrail() {
 
         setDataClientName(result);
 
-        // setDataDropdown(
-        //   result.map((item) => ({ value: item.id, label: item.friendlyName }))
-        // );
+        //setDataDropdown(
+        //  result.map((item) => ({ value: item.id, label: item.friendlyName }))
+        //);
 
         const dropdownDataTaxPreparer = [];
         const dropdownDataTaxReviewer = [];
@@ -238,7 +238,6 @@ export default function AuditTrail() {
         setDataClientMapping(ConstructClientMapping);
 
         //console.log("DataClientMapping" + dataClientMapping);
-
         //console.log(dropdownDataTaxPreparer);
         //console.log(dropdownDataTaxReviewer);
         //console.log(dropdownDataAccountManager);
@@ -254,7 +253,7 @@ export default function AuditTrail() {
           // );
           //if (filteredItems.length == 1) {
           //console.log(item.friendlyName.trim());
-          //dropdownData.push({ value: item.id, label: item.friendlyName });
+          dropdownData.push({ value: item.id, label: item.friendlyName });
           //}
         });
 
@@ -302,6 +301,7 @@ export default function AuditTrail() {
   const handleReset = () => {
     setSelectedValue("Select Client");
     setSelectedMember("Select User");
+    setError("");
 
     setSelectedValueTaxPreparer("Select Tax Preparer");
     setSelectedValueTaxReviewer("Select Tax Reviewer");
@@ -394,9 +394,8 @@ export default function AuditTrail() {
     } else {
       try {
         // Fetch shared folder data for the selected group
-
         //console.log("selectedValue:" + selectedValue);
-
+        setError("");
         const sharedDataResponse = await fetch(
           `/api/getSharedFolder?groupId=${selectedValue}`
         );
@@ -418,7 +417,6 @@ export default function AuditTrail() {
 
           //console.log("startDate:" + startDate);
           //console.log("endDate:" + endDate);
-
           //console.log("selectedMember" + selectedMember);
 
           if (selectedMember != "Select User") {
@@ -432,12 +430,17 @@ export default function AuditTrail() {
             endDate
           );
 
-          //console.log(filteredItems);
-
+          //console.log(filteredItems.length);
+          if (filteredItems.length == 0) {
+            setError("Search criteria don't have data");
+            console.log(filteredItems.length);
+          }
           setSharedData(filteredItems);
           //------------------------------------------------------------------------------------------------------
 
           setLoadData(true);
+        } else {
+          console.log("else ok");
         }
       } catch (err) {
         //setError(err.message);
@@ -674,7 +677,7 @@ export default function AuditTrail() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold pr-2">
+                  <label className="block text-sm font-medium pr-2">
                     Tax Preparer :
                   </label>{" "}
                   <select
@@ -694,7 +697,7 @@ export default function AuditTrail() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold pr-2">
+                  <label className="block text-sm font-medium pr-2">
                     Tax Reviewer :
                   </label>
                   <select
@@ -817,28 +820,30 @@ export default function AuditTrail() {
 
           <div className="max-w-[90%] mx-auto overflow-x-auto rounded-lg ">
             <table className="min-w-full border-collapse border border-gray-200">
-              <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">
-                    #
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    File Name
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Size (Bytes)
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Uploaded By
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Last Modified
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Download
-                  </th>
-                </tr>
-              </thead>
+              {sharedData.length > 0 && (
+                <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">
+                      #
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      File Name
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Size (Bytes)
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Uploaded By
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Last Modified
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Download
+                    </th>
+                  </tr>
+                </thead>
+              )}
 
               <tbody>
                 {sharedData &&
