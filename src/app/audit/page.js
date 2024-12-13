@@ -641,15 +641,15 @@ export default function AuditTrail() {
         </aside> */}
 
         {/* Main Section */}
-        <main className="flex-1 ">
-          <div className="min-h-screen flex items-center mb-0 justify-center -mt-8">
-            <div className="bg-white p-6 rounded-lg shadow-2xl w-full max-w-4xl space-y-4">
+        <main className="flex-1 bg-gray-100 min-h-screen ">
+          <div className=" mx-auto py-8 p-4 px-4">
+            <div className="bg-gray-50 p-6 w-full rounded-lg shadow-md">
               <h2 className="text-2xl  font-bold mb-4 text-center">
                 Audit Trail Report
               </h2>
 
               {/* Date Range */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-4 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Start Date :
@@ -798,19 +798,19 @@ export default function AuditTrail() {
                   {error && <p style={{ color: "red" }}>{error}</p>}
                 </div>
               </div>
-              <div className="flex justify-between mt-6">
+              <div className="flex justify-between   mt-6">
                 {" "}
                 <button
                   type="submit"
                   onClick={handleSubmit}
-                  className="w-1/2 bg-pink-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-700 mr-2"
+                  className="w-1/6 mx-auto  p-2 bg-pink-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-700 mr-2"
                 >
                   Show result
                 </button>
                 <button
                   type="submit"
                   onClick={handleReset}
-                  className="w-1/2 bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 ml-2"
+                  className="w-1/6 mx-auto bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 ml-2"
                 >
                   Reset
                 </button>
@@ -818,82 +818,95 @@ export default function AuditTrail() {
             </div>
           </div>
 
-          <div className="max-w-[90%] mx-auto overflow-x-auto rounded-lg ">
-            <table className="min-w-full border-collapse border border-gray-200">
-              {sharedData.length > 0 && (
-                <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                  <tr>
-                    <th scope="col" className="px-6 py-3">
-                      #
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      File Name
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      Size (Bytes)
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      Uploaded By
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      Last Modified
-                    </th>
-                    <th scope="col" className="px-6 py-3">
-                      Download
-                    </th>
-                  </tr>
-                </thead>
-              )}
+          <div className="bg-white mt-1 ml-4 mr-4 p-6 rounded-lg shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-left text-sm">
+                {sharedData.length > 0 && (
+                  <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">
+                        #
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        File Name
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        Size (Bytes)
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        Uploaded By
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        Last Modified
+                      </th>
+                      <th scope="col" className="px-6 py-3">
+                        Download
+                      </th>
+                    </tr>
+                  </thead>
+                )}
 
-              <tbody>
-                {sharedData &&
-                  sharedData?.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      style={{
-                        backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
-                        border: "1px solid #ddd",
-                      }}
-                    >
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {index + 1}
-                      </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {item.friendlyName || "N/A"}
-                      </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {formatSize(item.size) || "N/A"}
-                      </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {item.uploaded?.name || "Unknown"}
-                      </td>
-                      <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                        {formatDate(item.lastModified)}
-                      </td>
-                      <td
+                <tbody>
+                  {sharedData &&
+                    sharedData?.map((item, index) => (
+                      <tr
+                        key={item.id}
                         style={{
-                          padding: "10px",
+                          backgroundColor:
+                            item.id % 2 === 0 ? "#fff" : "#f6f6f6",
                           border: "1px solid #ddd",
-                          display: "flex",
-                          justifyContent: "center",
                         }}
                       >
-                        <Image
-                          src="/download.png"
-                          alt="Download"
-                          width={24}
-                          height={24}
-                          id={item.id}
-                          onClick={handleDownload}
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {index + 1}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {item.friendlyName || "N/A"}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {formatSize(item.size) || "N/A"}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {item.uploaded?.name || "Unknown"}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {formatDate(item.lastModified)}
+                        </td>
+                        <td
                           style={{
-                            cursor: "pointer",
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                            display: "flex",
+                            justifyContent: "center",
                           }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                        >
+                          <Image
+                            src="/download.png"
+                            alt="Download"
+                            width={24}
+                            height={24}
+                            id={item.id}
+                            onClick={handleDownload}
+                            style={{
+                              cursor: "pointer",
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </main>
       </div>
