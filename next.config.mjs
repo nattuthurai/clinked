@@ -10,7 +10,8 @@ const nextConfig = {
         LIST_CLIENTMAPPING_ID: process.env.LIST_CLIENTMAPPING_ID,
         INTEGRATION_KEY: process.env.INTEGRATION_KEY,
         CCH_PASSWORD: process.env.CCH_PASSWORD,
-    }
+    },
+    
 };
 
 export default nextConfig;
