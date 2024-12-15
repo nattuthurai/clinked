@@ -14,32 +14,21 @@ export default function HomePage() {
         method: "GET",
       });
 
-      console.log("1");
       //const result = await response.json();
-      console.log("2");
       const blob = await response.blob();
-      console.log("3");
       const downloadUrl = window.URL.createObjectURL(blob);
-      console.log("4");
       const link = document.createElement("a");
-      console.log("5");
       link.href = downloadUrl;
-      console.log("6");
+
       // Extract filename from Content-Disposition header if available
       const contentDisposition = response.headers.get("Content-Disposition");
-      console.log("7");
       const fileName = contentDisposition
         ? contentDisposition.split("filename=")[1].replace(/"/g, "")
         : "downloaded_file";
-      console.log("8");
       link.download = fileName;
-      console.log("9");
       document.body.appendChild(link);
-      console.log("10");
       link.click();
-      console.log("11");
       link.remove();
-      console.log("12");
 
       // console.log("result" + result);
 

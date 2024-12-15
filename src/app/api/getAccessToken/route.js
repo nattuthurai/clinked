@@ -306,10 +306,42 @@ export async function GET(request) {
         "Content-Disposition": response.headers.get("Content-Disposition"),
       });
 
-      return new NextResponse(response.body, {
-        status: 200,
-        headers: fileHeaders,
-      });
+      // return new NextResponse(response.body, {
+      //   status: 200,
+      //   headers: fileHeaders,
+      // });
+
+      //------------------------------------------------------------------------------------------------
+
+      try {
+        // Forward the incoming request body (stream) to the Clinked API
+        const clinkedResponse = await fetch(
+          "https://api.clinked.com/v3/tempFiles",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
+              "Content-Type": response.headers.get("Content-Type"), // Forward the content type from the original request
+            },
+            body: response.body, // Use the incoming request stream directly
+          }
+        );
+
+        // Handle the response from the Clinked API
+        if (!clinkedResponse.ok) {
+          const errorData = await clinkedResponse.text();
+          console.log("errorData"+errorData);
+        }
+
+        const uploadResponse = await clinkedResponse.json();
+        console.log(uploadResponse);
+        // Stream the response from the Clinked API back to the client
+        
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+
+      //------------------------------------------------------------------------------------------------
     } catch (error) {
       console.error("Error fetching the document:", error);
       return NextResponse.json(
