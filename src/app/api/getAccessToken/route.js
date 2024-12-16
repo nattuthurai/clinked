@@ -331,9 +331,6 @@ function addData(executionID, batchItemGuid, fileName) {
 
 async function processData(myDataArray, token) {
   for (const item of myDataArray) {
-    //console.log("Execution ID:", item.executionID);
-    //console.log("Batch Item Guid:", item.batchItemGuid);
-    //console.log("File Name:", item.fileName);
 
     const batchItemGuid = item.batchItemGuid;
     const fileName = item.fileName;
@@ -367,7 +364,9 @@ async function processData(myDataArray, token) {
         (!contentType.includes("multipart/form-data") &&
           !contentType.includes("application/octet-stream"))
       ) {
-        console.error("Invalid Content-Type. Expected multipart/form-data or application/octet-stream.");
+        console.error(
+          "Invalid Content-Type. Expected multipart/form-data or application/octet-stream."
+        );
         continue;
       }
       // Read the application/octet-stream data as an ArrayBuffer
@@ -381,13 +380,16 @@ async function processData(myDataArray, token) {
       const formData = new FormData();
       formData.append("file", blob, fileName);
 
-      const clinkedResponse = await fetch('https://api.clinked.com/v3/tempFiles', {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
-        },
-        body: formData,
-      });
+      const clinkedResponse = await fetch(
+        "https://api.clinked.com/v3/tempFiles",
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
+          },
+          body: formData,
+        }
+      );
 
       if (!clinkedResponse.ok) {
         const errorData = await clinkedResponse.text();
@@ -401,7 +403,8 @@ async function processData(myDataArray, token) {
 
       if (data.id != null) {
         try {
-          const apiUrl = "https://api.clinked.com/v3/groups/114020/files/12144164";
+          const apiUrl =
+            "https://api.clinked.com/v3/groups/114020/files/12144164";
 
           const payload = {
             friendlyName: fileName,
@@ -426,7 +429,7 @@ async function processData(myDataArray, token) {
           }
 
           const dataResponse = await responseUpload.json();
-          console.log("Upload Successful:", dataResponse);
+          //console.log("Upload Successful:", dataResponse);
         } catch (error) {
           console.error("Error in final upload process:", error);
         }
@@ -468,14 +471,14 @@ export async function GET(request) {
 
     const data = await response.json();
     let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
-    console.log("Retrieved IDss:", dataString);
+    //console.log("Retrieved IDss:", dataString);
 
     const dataArray = dataString.split(",");
     const batchResult = await processPrintBatch(dataArray, token);
-    console.log("batchResult Output" + batchResult);
+    //console.log("batchResult Output" + batchResult);
 
     const batchOutput = await BatchStatusResult(token, batchResult);
-    console.log("batchOutput:" + batchOutput);
+    //console.log("batchOutput:" + batchOutput);
 
     if (batchOutput === true) {
       if (batchResult.length > 0) {
@@ -498,219 +501,10 @@ export async function GET(request) {
       }
     }
 
-    //console.log("Im here");
-
     await processData(myDataArray, token);
 
-    //console.log(myDataArray)
-    //executionID,batchItemGuid,fileName
+    return NextResponse.json("Successfully uploaded!!", { status: 200 });
 
-    /*const batchOutputFilesResult = await BatchOutputFiles(token, executionID);
-    const outputBatchOutputFilesResult = await batchOutputFilesResult.json();
-    console.log("batchOutputFilesResult" + outputBatchOutputFilesResult);
-
-    return NextResponse.json(outputBatchOutputFilesResult, { status: 200 });
-     const fileResponse = FileDownload(
-      token,
-       batchItemGuid,
-      executionID,
-       fileName
-    );
-
-
-    myDataArray.forEach((item) => {
-      console.log("Execution ID:", item.executionID);
-      console.log("Batch Item Guid:", item.batchItemGuid);
-      console.log("File Name:", item.fileName);
-    });
-
-     */
-
-    /*myDataArray.forEach((item) => {
-      console.log("Execution ID:", item.executionID);
-      console.log("Batch Item Guid:", item.batchItemGuid);
-      console.log("File Name:", item.fileName);
-    
-
-    let batchItemGuid = item.batchItemGuid;
-    let fileName = item.fileName;
-    let BatchGuid = item.executionID;
-
-    //--------------------------------------------------------------------------------------------------
-
-    const apiUrl1 = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/BatchOutputDownloadFile`;
-
-    try {
-      const response = await fetch(
-        `${apiUrl1}?$filter=BatchItemGuid eq '${batchItemGuid}' and BatchGuid eq '${BatchGuid}' and FileName eq '${fileName}'`,
-        {
-          method: "GET",
-          headers: {
-            Security: token,
-            "Cache-Control": "no-cache",
-            IntegratorKey: integrationKey,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: "Failed to fetch document from the external API" },
-          { status: response.status }
-        );
-      }
-
-      // Create a response with the file's content and headers
-      const fileHeaders = new Headers({
-        "Content-Type": response.headers.get("Content-Type"),
-        "Content-Disposition": response.headers.get("Content-Disposition"),
-      });
-
-      // return new NextResponse(response.body, {
-      //   status: 200,
-      //   headers: fileHeaders,
-      // });
-
-      console.log("1");
-
-      //------------------------------------------------------------------------------------------------
-
-      try {
-        // Check if the request contains a readable stream for the file
-        const contentType = response.headers.get("Content-Type");
-
-        console.log("contentType" + contentType);
-
-        if (
-          !contentType &&
-          !contentType.includes("multipart/form-data") &&
-          !contentType.includes("application/octet-stream")
-        ) {
-          return NextResponse.json(
-            { error: "Invalid Content-Type. Expected multipart/form-data." },
-            { status: 400 }
-          );
-        }
-
-        console.log("2");
-
-        // Read the application/octet-stream data as an ArrayBuffer
-        const arrayBuffer = await response.arrayBuffer();
-
-        // Create a Blob from the ArrayBuffer with a specified MIME type and filename
-        const blob = new Blob([arrayBuffer], {
-          type: "application/octet-stream",
-        });
-        //const filename = "2023US P943 Acct V1.pdf"; // Set an appropriate filename for the file
-
-        // Create a new FormData object and append the Blob with a filename
-        const formData = new FormData();
-        formData.append("file", blob, fileName);
-
-        console.log("3");
-
-        if (!response.body) {
-          return NextResponse.json(
-            { error: "No file found in the request." },
-            { status: 400 }
-          );
-        }
-
-        console.log("4");
-
-        // Make the request to the Clinked API
-        const clinkedResponse = await fetch('https://api.clinked.com/v3/tempFiles', {
-          method: 'POST',
-          headers: {
-            Authorization: 'Bearer fca75494-1254-46df-a88c-ea51ac12a299',
-          },
-          body: formData, // Send the FormData object
-        });
-
-        console.log("5");
-
-        if (!clinkedResponse.ok) {
-          const errorData = await clinkedResponse.text();
-          return NextResponse.json(
-            { error: errorData },
-            { status: clinkedResponse.status }
-          );
-        }
-
-        console.log("6");
-        const data = await clinkedResponse.json();
-
-        console.log("7");
-
-        console.log("ID:" + data.id);
-        console.log("friendlyName:" + fileName);
-
-        //return NextResponse.json(data, { status: 200 });
-        if (data.id != null) {
-          //--------------------------------------------------------------------------------------------------
-          try {
-            // Define the API endpoint
-            //const apiUrl ="https://api.clinked.com/v3/groups/114020/files/12144164";
-            const apiUrl =
-              "https://api.clinked.com/v3/groups/114020/files/12144169";
-
-            // Define the payload directly in the API
-            const payload = {
-              friendlyName: fileName,
-              tempFile: data.id,
-              sharing: "MEMBERS",
-              memberPermission: 8,
-            };
-
-            console.log("8");
-            // Make the request to the Clinked API
-            const responseUpload = await fetch(apiUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
-              },
-              body: JSON.stringify(payload),
-            });
-            console.log("9");
-            // Handle errors from the Clinked API
-            if (!responseUpload.ok) {
-              const errorData = await responseUpload.text();
-              return NextResponse.json(
-                { error: errorData },
-                { status: response.status }
-              );
-            }
-            console.log("10");
-            // Parse the response from the Clinked API
-            const dataResponse = await responseUpload.json();
-            console.log("11");
-            // Return the successful response
-            return NextResponse.json(dataResponse, { status: 200 });
-          } catch (error) {
-            // Handle any errors that occur during the process
-            return NextResponse.json({ error: error.message }, { status: 500 });
-          }
-          //--------------------------------------------------------------------------------------------------
-        }
-      } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
-
-      //------------------------------------------------------------------------------------------------
-    } catch (error) {
-      console.error("Error fetching the document:", error);
-      return NextResponse.json(
-        { error: "Internal Server Error" },
-        { status: 500 }
-      );
-    }
-
-    });*/
-    //--------------------------------------------------------------------------------------------------
-
-    //console.log("fileResponse" + fileResponse);
-    //return NextResponse.json(fileResponse, { status: 200 });
   } catch (error) {
     console.error("Error in GET handler:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
