@@ -54,13 +54,12 @@ export default function HomePage() {
         method: "GET",
       });
 
-      //const result = await response.json();
-      const blob = await response.blob();
+      const result = await response.json();
+
+      /*const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-
-      // Extract filename from Content-Disposition header if available
       const contentDisposition = response.headers.get("Content-Disposition");
       const fileName = contentDisposition
         ? contentDisposition.split("filename=")[1].replace(/"/g, "")
@@ -68,11 +67,11 @@ export default function HomePage() {
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      link.remove();*/
 
       // console.log("result" + result);
 
-      //setData(result);
+      setData(result);
     } catch (err) {
       setError("Failed to fetch data");
     }

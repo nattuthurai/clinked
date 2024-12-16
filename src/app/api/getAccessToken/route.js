@@ -254,7 +254,7 @@ async function processPrintBatch(dataArray, token) {
 }
 
 // Delay function to wait for a specified number of milliseconds
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /*async function BatchStatusResult(token,batchResult) {
   const batchResultArray = batchResult.split(",");
@@ -299,9 +299,9 @@ async function BatchStatusResult(token, batchResult) {
 
         if (outputStatusResult.BatchStatusDescription === "Complete") {
           isComplete = true;
-        }
-        else
-        {
+        } else if (outputStatusResult.BatchStatusDescription === "Exception") {
+          isComplete = true;
+        } else {
           isComplete = false;
           break;
         }
@@ -318,7 +318,7 @@ async function BatchStatusResult(token, batchResult) {
   return isComplete;
 }
 
-function addData(executionID,batchItemGuid,fileName) {
+function addData(executionID, batchItemGuid, fileName) {
   const newItem = {
     executionID: executionID,
     batchItemGuid: batchItemGuid,
@@ -327,6 +327,114 @@ function addData(executionID,batchItemGuid,fileName) {
 
   // Push the new object into the array
   myDataArray.push(newItem);
+}
+
+async function processData(myDataArray, token) {
+  for (const item of myDataArray) {
+    //console.log("Execution ID:", item.executionID);
+    //console.log("Batch Item Guid:", item.batchItemGuid);
+    //console.log("File Name:", item.fileName);
+
+    const batchItemGuid = item.batchItemGuid;
+    const fileName = item.fileName;
+    const BatchGuid = item.executionID;
+
+    const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/BatchOutputDownloadFile`;
+
+    try {
+      const response = await fetch(
+        `${apiUrl}?$filter=BatchItemGuid eq '${batchItemGuid}' and BatchGuid eq '${BatchGuid}' and FileName eq '${fileName}'`,
+        {
+          method: "GET",
+          headers: {
+            Security: token,
+            "Cache-Control": "no-cache",
+            IntegratorKey: integrationKey,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to fetch document from the external API");
+        continue;
+      }
+
+      const contentType = response.headers.get("Content-Type");
+      //console.log("Content-Type:", contentType);
+
+      if (
+        !contentType ||
+        (!contentType.includes("multipart/form-data") &&
+          !contentType.includes("application/octet-stream"))
+      ) {
+        console.error("Invalid Content-Type. Expected multipart/form-data or application/octet-stream.");
+        continue;
+      }
+      // Read the application/octet-stream data as an ArrayBuffer
+      const arrayBuffer = await response.arrayBuffer();
+
+      // Create a Blob from the ArrayBuffer
+      const blob = new Blob([arrayBuffer], {
+        type: "application/octet-stream",
+      });
+
+      const formData = new FormData();
+      formData.append("file", blob, fileName);
+
+      const clinkedResponse = await fetch('https://api.clinked.com/v3/tempFiles', {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
+        },
+        body: formData,
+      });
+
+      if (!clinkedResponse.ok) {
+        const errorData = await clinkedResponse.text();
+        console.error("Error uploading to Clinked:", errorData);
+        continue;
+      }
+
+      const data = await clinkedResponse.json();
+      //console.log("Clinked Response ID:", data.id);
+      //console.log("Friendly Name:", fileName);
+
+      if (data.id != null) {
+        try {
+          const apiUrl = "https://api.clinked.com/v3/groups/114020/files/12144164";
+
+          const payload = {
+            friendlyName: fileName,
+            tempFile: data.id,
+            sharing: "MEMBERS",
+            memberPermission: 8,
+          };
+
+          const responseUpload = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer fca75494-1254-46df-a88c-ea51ac12a299",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!responseUpload.ok) {
+            const errorData = await responseUpload.text();
+            console.error("Error in final upload:", errorData);
+            continue;
+          }
+
+          const dataResponse = await responseUpload.json();
+          console.log("Upload Successful:", dataResponse);
+        } catch (error) {
+          console.error("Error in final upload process:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching the document:", error);
+    }
+  }
 }
 
 // Main GET handler function
@@ -362,46 +470,71 @@ export async function GET(request) {
     let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
     console.log("Retrieved IDss:", dataString);
 
-    //return NextResponse.json(data, { status: 200 });
-
-    // Call the printBatch function
-    //const batchResult = await printBatch(token, dataString);
-    //dataString = "2023P:498:V1,2023P:943:V1,2023S:2:V1";
-
     const dataArray = dataString.split(",");
     const batchResult = await processPrintBatch(dataArray, token);
     console.log("batchResult Output" + batchResult);
 
-    //const executionID = batchResult.ExecutionID;
-    //const executionID = "598a5ff1-a647-40d6-b340-f3e7e38afa20";
-    //console.log("executionID:" + executionID);
-    //return NextResponse.json(batchResult, { status: 200 });
+    const batchOutput = await BatchStatusResult(token, batchResult);
+    console.log("batchOutput:" + batchOutput);
 
-    const batchOutput = await BatchStatusResult(token,batchResult);
-    console.log("batchOutput:"+batchOutput);
+    if (batchOutput === true) {
+      if (batchResult.length > 0) {
+        const dtArray = batchResult.split(",");
 
-    if(batchOutput===true)
-    {
+        for (const executionID of dtArray) {
+          const batchOutputFilesResult = await BatchOutputFiles(
+            token,
+            executionID
+          );
+          const outputBatchOutputFilesResult =
+            await batchOutputFilesResult.json();
 
+          addData(
+            executionID,
+            outputBatchOutputFilesResult[0].BatchItemGuid,
+            outputBatchOutputFilesResult[0].FileName
+          );
+        }
+      }
     }
 
+    //console.log("Im here");
+
+    await processData(myDataArray, token);
+
+    //console.log(myDataArray)
     //executionID,batchItemGuid,fileName
 
     /*const batchOutputFilesResult = await BatchOutputFiles(token, executionID);
     const outputBatchOutputFilesResult = await batchOutputFilesResult.json();
     console.log("batchOutputFilesResult" + outputBatchOutputFilesResult);
 
-    //return NextResponse.json(outputBatchOutputFilesResult, { status: 200 });
+    return NextResponse.json(outputBatchOutputFilesResult, { status: 200 });
+     const fileResponse = FileDownload(
+      token,
+       batchItemGuid,
+      executionID,
+       fileName
+    );
 
-    let batchItemGuid = "39f3a213-e3ba-4771-b494-7869136bc6b8";
-    let fileName = "2023US P943 Acct V1.pdf";
 
-    // const fileResponse = FileDownload(
-    //   token,
-    //   batchItemGuid,
-    //   executionID,
-    //   fileName
-    // );
+    myDataArray.forEach((item) => {
+      console.log("Execution ID:", item.executionID);
+      console.log("Batch Item Guid:", item.batchItemGuid);
+      console.log("File Name:", item.fileName);
+    });
+
+     */
+
+    /*myDataArray.forEach((item) => {
+      console.log("Execution ID:", item.executionID);
+      console.log("Batch Item Guid:", item.batchItemGuid);
+      console.log("File Name:", item.fileName);
+    
+
+    let batchItemGuid = item.batchItemGuid;
+    let fileName = item.fileName;
+    let BatchGuid = item.executionID;
 
     //--------------------------------------------------------------------------------------------------
 
@@ -409,7 +542,7 @@ export async function GET(request) {
 
     try {
       const response = await fetch(
-        `${apiUrl1}?$filter=BatchItemGuid eq '${batchItemGuid}' and BatchGuid eq '${executionID}' and FileName eq '${fileName}'`,
+        `${apiUrl1}?$filter=BatchItemGuid eq '${batchItemGuid}' and BatchGuid eq '${BatchGuid}' and FileName eq '${fileName}'`,
         {
           method: "GET",
           headers: {
@@ -572,11 +705,11 @@ export async function GET(request) {
         { status: 500 }
       );
     }
-*/
+
+    });*/
     //--------------------------------------------------------------------------------------------------
 
     //console.log("fileResponse" + fileResponse);
-
     //return NextResponse.json(fileResponse, { status: 200 });
   } catch (error) {
     console.error("Error in GET handler:", error);
