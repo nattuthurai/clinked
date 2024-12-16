@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 const integrationKey = process.env.INTEGRATION_KEY;
 const cchPassword = process.env.CCH_PASSWORD;
 
+const myDataArray = [];
+
 // Function to get an access token
 async function getAccessToken() {
   const url = "https://api.cchaxcess.com/api/AuthService/v1.0/Authenticate";
@@ -236,6 +238,97 @@ async function streamToArrayBuffer(stream) {
   return concatenated.buffer;
 }
 
+async function processPrintBatch(dataArray, token) {
+  //console.log("dataArray:" + dataArray);
+
+  let results = [];
+
+  for (const item of dataArray) {
+    //console.log("item:" + item);
+    const batchResult = await printBatch(token, item);
+    //console.log("ExecutionID:" + batchResult.ExecutionID);
+    results.push(batchResult.ExecutionID);
+  }
+
+  return results.join(",");
+}
+
+// Delay function to wait for a specified number of milliseconds
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/*async function BatchStatusResult(token,batchResult) {
+  const batchResultArray = batchResult.split(",");
+  let isComplete = false;
+  if (batchResultArray.length > 0) {
+    for (const executionID of batchResultArray) {
+      const batchStatusResult = await BatchStatus(token, executionID);
+      const outputStatusResult = await batchStatusResult.json();
+
+      if (outputStatusResult.BatchStatusDescription == "Complete") {
+        batchResult=true;
+        console.log(
+          "BatchStatusDescription:" + outputStatusResult.BatchStatusDescription
+        );
+      } else {
+        console.log(
+          "BatchStatusDescription:" + outputStatusResult.BatchStatusDescription
+        );
+        break;
+      }
+
+      console.log("batchStatusResult" + outputStatusResult);
+      //return NextResponse.json(outputStatusResult, { status: 200 });
+    }
+  }
+  return isComplete;
+}*/
+
+async function BatchStatusResult(token, batchResult) {
+  const batchResultArray = batchResult.split(",");
+  let isComplete = false;
+
+  while (!isComplete) {
+    if (batchResultArray.length > 0) {
+      for (const executionID of batchResultArray) {
+        const batchStatusResult = await BatchStatus(token, executionID);
+        const outputStatusResult = await batchStatusResult.json();
+
+        console.log(
+          "BatchStatusDescription: " + outputStatusResult.BatchStatusDescription
+        );
+
+        if (outputStatusResult.BatchStatusDescription === "Complete") {
+          isComplete = true;
+        }
+        else
+        {
+          isComplete = false;
+          break;
+        }
+      }
+    }
+
+    if (!isComplete) {
+      console.log("Waiting for 30 seconds before checking again...");
+      await delay(30000); // 30-second delay
+    }
+  }
+
+  console.log("All batches are complete!");
+  return isComplete;
+}
+
+function addData(executionID,batchItemGuid,fileName) {
+  const newItem = {
+    executionID: executionID,
+    batchItemGuid: batchItemGuid,
+    fileName: fileName,
+  };
+
+  // Push the new object into the array
+  myDataArray.push(newItem);
+}
+
 // Main GET handler function
 export async function GET(request) {
   try {
@@ -266,27 +359,35 @@ export async function GET(request) {
     }
 
     const data = await response.json();
-    //const ids = data.Returns.map((item) => `"${item.ReturnID}"`).join(",");
-    const ids = "2023P:943:V1";
-    console.log("Retrieved IDs:", ids);
+    let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
+    console.log("Retrieved IDss:", dataString);
 
     //return NextResponse.json(data, { status: 200 });
 
     // Call the printBatch function
-    const batchResult = await printBatch(token, ids);
+    //const batchResult = await printBatch(token, dataString);
+    //dataString = "2023P:498:V1,2023P:943:V1,2023S:2:V1";
+
+    const dataArray = dataString.split(",");
+    const batchResult = await processPrintBatch(dataArray, token);
+    console.log("batchResult Output" + batchResult);
+
     //const executionID = batchResult.ExecutionID;
-
-    const executionID = "598a5ff1-a647-40d6-b340-f3e7e38afa20";
-    console.log("executionID:" + executionID);
-
+    //const executionID = "598a5ff1-a647-40d6-b340-f3e7e38afa20";
+    //console.log("executionID:" + executionID);
     //return NextResponse.json(batchResult, { status: 200 });
 
-    const batchStatusResult = await BatchStatus(token, executionID);
-    const outputStatusResult = await batchStatusResult.json();
-    console.log("batchStatusResult" + outputStatusResult);
-    //return NextResponse.json(outputStatusResult, { status: 200 });
+    const batchOutput = await BatchStatusResult(token,batchResult);
+    console.log("batchOutput:"+batchOutput);
 
-    const batchOutputFilesResult = await BatchOutputFiles(token, executionID);
+    if(batchOutput===true)
+    {
+
+    }
+
+    //executionID,batchItemGuid,fileName
+
+    /*const batchOutputFilesResult = await BatchOutputFiles(token, executionID);
     const outputBatchOutputFilesResult = await batchOutputFilesResult.json();
     console.log("batchOutputFilesResult" + outputBatchOutputFilesResult);
 
@@ -471,7 +572,7 @@ export async function GET(request) {
         { status: 500 }
       );
     }
-
+*/
     //--------------------------------------------------------------------------------------------------
 
     //console.log("fileResponse" + fileResponse);
