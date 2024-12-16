@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
+import { PuffLoader } from "react-spinners";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
 
@@ -49,13 +50,16 @@ export default function HomePage() {
 
   const handleAuth = async () => {
     try {
+
+      setLoading(true); // Show spinner when the operation starts
       let filterInfo = "TaxYear eq '2023'";
       const response = await fetch(`/api/getAccessToken?filter=${filterInfo}`, {
         method: "GET",
       });
 
       const result = await response.json();
-
+      setData(result);
+      setLoading(false); // Hide spinner when the operation finishes
       /*const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -71,7 +75,7 @@ export default function HomePage() {
 
       // console.log("result" + result);
 
-      setData(result);
+      
     } catch (err) {
       setError("Failed to fetch data");
     }
@@ -79,7 +83,7 @@ export default function HomePage() {
 
   return (
     <div className="container" style={{ maxWidth: '500px', margin: '50px auto', textAlign: 'center' }}>
-      <h1>Upload a File</h1>
+      {/* <h1>Upload a File</h1>
       <input
         type="file"
         onChange={handleFileChange}
@@ -101,21 +105,29 @@ export default function HomePage() {
       </button>
       <p style={{ marginTop: "20px", whiteSpace: "pre-wrap" }}>
         {uploadStatus}
-      </p>
+      </p> */}
 
-      <h1>Authenticate with CCH Axcess API</h1>
-      <button onClick={handleAuth} style={{
-          padding: "10px 20px",
-          backgroundColor: "#0070f3",
-          color: "white",
+      <h1>Upload files from CCH to Clinked</h1>
+      <button onClick={handleAuth} disabled={loading}
+        style={{
+          padding: "0.75rem 1.5rem",
+          fontSize: "1rem",
+          cursor: loading ? "not-allowed" : "pointer",
+          backgroundColor: loading ? "#aaa" : "#0070f3",
+          color: "#fff",
           border: "none",
           borderRadius: "5px",
-          cursor: "pointer",
-        }}>Authenticate</button>
+          marginBottom: "1rem",
+        }}
+      >
+        {loading ? "Processing..." : "Upload Files"}</button>
 
       {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
 
       {error && <p style={{ color: "red" }}>{error}</p>}
+
+       {/* Spinner component */}
+       {loading && <PuffLoader color="#0070f3" size={60} />}
     </div>
   );
 }
