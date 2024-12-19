@@ -58,33 +58,28 @@ async function printBatch(securityKey, returnIds) {
 
   //console.log("headers:"+headers);
 
-  // const body = {
-  //   ReturnId: [returnIds],
-  //   ConfigurationXml: `<!--§§§ © 2014, CCH Incorporated. All rights reserved. §§§-->
-  //     <TaxReturnBatchPrintEntireReturn>
-  //       <TaxReturnPrintClientDataOptions>KeepCurrentClientInformationInTaxReturn</TaxReturnPrintClientDataOptions>
-  //       <ReturnAuthorizationOptions>ApplyAuthorizationsIfNeeded</ReturnAuthorizationOptions>
-  //       <PrintsetName>Default</PrintsetName>
-  //       <PrintEntireReturnOptions>
-  //         <PrintOneStatementPerPage>false</PrintOneStatementPerPage>
-  //         <CreateSeparateFiles>false</CreateSeparateFiles>
-  //         <PrintStatementsBehindForms>false</PrintStatementsBehindForms>
-  //         <DiagnosticsPrintFilter>AllDiagnostics</DiagnosticsPrintFilter>
-  //         <CreateSeparateK1PDFFiles>false</CreateSeparateK1PDFFiles>
-  //         <PrintOptions_AccountantCopy>
-  //           <PrintToPdf>true</PrintToPdf>
-  //           <Watermark>No Watermark</Watermark>
-  //           <PrintTickmarks>false</PrintTickmarks>
-  //           <IsMasked>false</IsMasked>
-  //           <IncludeEFileAttachment>false</IncludeEFileAttachment>
-  //         </PrintOptions_AccountantCopy>
-  //       </PrintEntireReturnOptions>
-  //     </TaxReturnBatchPrintEntireReturn>`,
-  // };
-
   const body = {
     ReturnId: [returnIds],
-    ConfigurationXml: `<!--§§§ © 2014, CCH Incorporated. All rights reserved. §§§--><TaxReturnBatchPrintEntireReturn><TaxReturnPrintClientDataOptions>KeepCurrentClientInformationInTaxReturn</TaxReturnPrintClientDataOptions><ReturnAuthorizationOptions>ApplyAuthorizationsIfNeeded</ReturnAuthorizationOptions><PrintsetName>Default</PrintsetName><PrintEntireReturnOptions><PrintOneStatementPerPage>false</PrintOneStatementPerPage><CreateSeparateFiles>true</CreateSeparateFiles><PrintStatementsBehindForms>false</PrintStatementsBehindForms><DiagnosticsPrintFilter>AllDiagnostics</DiagnosticsPrintFilter><CreateSeparateK1PDFFiles>false</CreateSeparateK1PDFFiles><PrintOptions_AccountantCopy><PrintToPdf>true</PrintToPdf><Watermark>No Watermark</Watermark><PrintTickmarks>false</PrintTickmarks><IsMasked>false</IsMasked><IncludeEFileAttachment>false</IncludeEFileAttachment></PrintOptions_AccountantCopy><PrintOptions_GovernmentCopy><PrintToPdf>true</PrintToPdf><Watermark>No Watermark</Watermark><PrintEntireCopyForEFileQualifiedReturns>false</PrintEntireCopyForEFileQualifiedReturns><IncludeEFileAttachment>false</IncludeEFileAttachment></PrintOptions_GovernmentCopy><PrintOptions_ClientCopy><PrintToPdf>true</PrintToPdf><Watermark>No Watermark</Watermark><IsMasked>false</IsMasked><IncludeEFileAttachment>false</IncludeEFileAttachment></PrintOptions_ClientCopy></PrintEntireReturnOptions></TaxReturnBatchPrintEntireReturn>`,
+    ConfigurationXml: `<!--§§§ © 2014, CCH Incorporated. All rights reserved. §§§-->
+      <TaxReturnBatchPrintEntireReturn>
+        <TaxReturnPrintClientDataOptions>KeepCurrentClientInformationInTaxReturn</TaxReturnPrintClientDataOptions>
+        <ReturnAuthorizationOptions>ApplyAuthorizationsIfNeeded</ReturnAuthorizationOptions>
+        <PrintsetName>Default</PrintsetName>
+        <PrintEntireReturnOptions>
+          <PrintOneStatementPerPage>false</PrintOneStatementPerPage>
+          <CreateSeparateFiles>false</CreateSeparateFiles>
+          <PrintStatementsBehindForms>false</PrintStatementsBehindForms>
+          <DiagnosticsPrintFilter>AllDiagnostics</DiagnosticsPrintFilter>
+          <CreateSeparateK1PDFFiles>false</CreateSeparateK1PDFFiles>
+          <PrintOptions_AccountantCopy>
+            <PrintToPdf>true</PrintToPdf>
+            <Watermark>No Watermark</Watermark>
+            <PrintTickmarks>false</PrintTickmarks>
+            <IsMasked>false</IsMasked>
+            <IncludeEFileAttachment>false</IncludeEFileAttachment>
+          </PrintOptions_AccountantCopy>
+        </PrintEntireReturnOptions>
+      </TaxReturnBatchPrintEntireReturn>`,
   };
 
   //console.log("body:"+body);
@@ -336,6 +331,7 @@ function addData(executionID, batchItemGuid, fileName) {
 
 async function processData(myDataArray, token) {
   for (const item of myDataArray) {
+
     const batchItemGuid = item.batchItemGuid;
     const fileName = item.fileName;
     const BatchGuid = item.executionID;
@@ -407,8 +403,8 @@ async function processData(myDataArray, token) {
 
       if (data.id != null) {
         try {
-          //const apiUrl ="https://api.clinked.com/v3/groups/114020/files/12144164";
-          const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12673228";
+          const apiUrl =
+            "https://api.clinked.com/v3/groups/114020/files/12144164";
 
           const payload = {
             friendlyName: fileName,
@@ -496,24 +492,11 @@ export async function GET(request) {
           const outputBatchOutputFilesResult =
             await batchOutputFilesResult.json();
 
-          outputBatchOutputFilesResult.forEach((item) => {
-
-             console.log(`BatchItemGuid: ${item.BatchItemGuid}`);
-             console.log(`FileName: ${item.FileName}`);
-            // console.log('-------------------------');
-
-            addData(
-              executionID,
-              item.BatchItemGuid,
-              item.FileName
-            );
-          });
-
-          // addData(
-          //   executionID,
-          //   outputBatchOutputFilesResult[0].BatchItemGuid,
-          //   outputBatchOutputFilesResult[0].FileName
-          // );
+          addData(
+            executionID,
+            outputBatchOutputFilesResult[0].BatchItemGuid,
+            outputBatchOutputFilesResult[0].FileName
+          );
         }
       }
     }
@@ -521,6 +504,7 @@ export async function GET(request) {
     await processData(myDataArray, token);
 
     return NextResponse.json("Successfully uploaded!!", { status: 200 });
+
   } catch (error) {
     console.error("Error in GET handler:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
