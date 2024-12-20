@@ -11,6 +11,7 @@ const nextConfig = {
         INTEGRATION_KEY: process.env.INTEGRATION_KEY,
         CCH_PASSWORD: process.env.CCH_PASSWORD,
         CCH_CLIENTS_ID: process.env.CCH_CLIENTS_ID,
+        NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     },
     
 };

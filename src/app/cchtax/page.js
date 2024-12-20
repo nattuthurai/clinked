@@ -13,6 +13,7 @@ export default function HomePage() {
   const [batchItems, setBatchItems] = useState([]);
   const [selectedValue, setSelectedValue] = useState("Select Client");
   const [selectedYearValue, setSelectedYearValue] = useState("Select Year");
+  const [selectedText, setSelectedText] = useState("");
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -22,7 +23,11 @@ export default function HomePage() {
   const handleChange = async (event) => {
     const selectedGroupId = event.target.value;
     setSelectedValue(selectedGroupId);
-    console.log("selectedGroupId:" + selectedGroupId);
+    if (event.target && event.target.options) {
+      setSelectedText(event.target.options[event.target.selectedIndex].text);
+    }
+    //console.log("selectedGroupId:" + selectedGroupId);
+    //console.log("selectedText:" + event.target.options[event.target.selectedIndex].text);
   };
 
   const handleYearChange = async (event) => {
@@ -124,9 +129,13 @@ export default function HomePage() {
       setLoading(true); // Show spinner when the operation starts
       //let filterInfo = "TaxYear eq '2023'";
       let filterInfo = `TaxYear eq '${selectedYearValue}' and ClientID eq '${selectedValue}'`;
-      const response = await fetch(`/api/getAccessToken?filter=${filterInfo}`, {
-        method: "GET",
-      });
+      let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
+      const response = await fetch(
+        `/api/getAccessToken?filter=${filterInfo}&query=${query}`,
+        {
+          method: "GET",
+        }
+      );
 
       const result = await response.json();
       setData(result);
@@ -182,7 +191,7 @@ export default function HomePage() {
       <div>
         <label className="block text-sm font-medium mb-1">Clients :</label>{" "}
         <select
-          id="dropdown"
+          id="option"
           value={selectedValue}
           onChange={handleChange}
           className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
@@ -213,7 +222,6 @@ export default function HomePage() {
         </select>
       </div>
 
-      <h1>Upload files from CCH to Clinked</h1>
       <button
         onClick={handleAuth}
         disabled={loading}
@@ -228,7 +236,7 @@ export default function HomePage() {
           marginBottom: "1rem",
         }}
       >
-        {loading ? "Processing..." : "Upload Files"}
+        {loading ? "Processing..." : "Print Files"}
       </button>
 
       {data && <pre>{JSON.stringify(data, null, 2)}</pre>}

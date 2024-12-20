@@ -323,13 +323,11 @@ async function BatchStatusResult(token, batchResult) {
   return isComplete;
 }
 
-function addData(executionID, batchItemGuid, fileName,groupId,fileId) {
+function addData(executionID, batchItemGuid, fileName) {
   const newItem = {
     executionID: executionID,
     batchItemGuid: batchItemGuid,
     fileName: fileName,
-    groupId: groupId,
-    fileId: fileId,
   };
 
   // Push the new object into the array
@@ -341,8 +339,6 @@ async function processData(myDataArray, token) {
     const batchItemGuid = item.batchItemGuid;
     const fileName = item.fileName;
     const BatchGuid = item.executionID;
-    const groupId = item.groupId;
-    const fileId = item.fileId;
 
     const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/BatchOutputDownloadFile`;
 
@@ -412,9 +408,7 @@ async function processData(myDataArray, token) {
       if (data.id != null) {
         try {
           //const apiUrl ="https://api.clinked.com/v3/groups/114020/files/12144164";
-          //const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12673228";
-          //const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12674786";
-          const apiUrl =`https://api.clinked.com/v3/groups/${groupId}/files/${fileId}`;
+          const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12673228";
 
           const payload = {
             friendlyName: fileName,
@@ -461,57 +455,6 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const filterReq = searchParams.get("filter");
-    const query = searchParams.get("query");
-    const cleanedData = query.replace(/'/g, "");
-    let taxReturnsClientsCopy="";
-    let taxReturnsAccountantsCopy="";
-    //console.log(cleanedData)
-
-    const [year, clientCode, clientName] = cleanedData.split("|");
-
-    const responseClient = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/client`
-    );
-    if (!responseClient.ok) {
-      throw new Error(`Failed to fetch: ${responseClient.statusText}`);
-    }
-    const result = await responseClient.json();
-    //console.log("result:"+result);
-
-    console.log("clientName" + clientName);
-
-    let groupId = "";
-
-    result.map((item) => {
-      if (item.friendlyName.toUpperCase().includes(clientName.toUpperCase())) {
-        groupId = item.id;
-      }
-    });
-
-    //console.log("groupId:" + groupId);
-
-    const sharedDataResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}`
-    );
-    if (sharedDataResponse.ok) {
-      const sharedDataResult = await sharedDataResponse.json();
-      //console.log("sharedDataResult:" + sharedDataResult);
-
-      taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
-      taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
-
-      // console.log(
-      //   "sharedDataResult TaxReturnsClientsCopy:" +
-      //     sharedDataResult.TaxReturnsClientsCopy
-      // );
-      // console.log(
-      //   "sharedDataResult TaxReturnsAccountantsCopy:" +
-      //     sharedDataResult.TaxReturnsAccountantsCopy
-      // );
-    }
-
-    //console.log("year"+year);
-    //console.log("yeclientCodear"+clientCode);
 
     const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/Returns?$filter=${filterReq}`;
 
@@ -554,16 +497,23 @@ export async function GET(request) {
             await batchOutputFilesResult.json();
 
           outputBatchOutputFilesResult.forEach((item) => {
-            if(item.FileName.toUpperCase().includes("GOVT")||item.FileName.toUpperCase().includes("ACCT"))
-            {
-              addData(executionID, item.BatchItemGuid, item.FileName,groupId,taxReturnsAccountantsCopy);
-            }
-            else
-            {
-              addData(executionID, item.BatchItemGuid, item.FileName,groupId,taxReturnsClientsCopy);
-            }
-            
+
+             console.log(`BatchItemGuid: ${item.BatchItemGuid}`);
+             console.log(`FileName: ${item.FileName}`);
+            // console.log('-------------------------');
+
+            addData(
+              executionID,
+              item.BatchItemGuid,
+              item.FileName
+            );
           });
+
+          // addData(
+          //   executionID,
+          //   outputBatchOutputFilesResult[0].BatchItemGuid,
+          //   outputBatchOutputFilesResult[0].FileName
+          // );
         }
       }
     }
