@@ -26,8 +26,6 @@ export default function HomePage() {
     if (event.target && event.target.options) {
       setSelectedText(event.target.options[event.target.selectedIndex].text);
     }
-    //console.log("selectedGroupId:" + selectedGroupId);
-    //console.log("selectedText:" + event.target.options[event.target.selectedIndex].text);
   };
 
   const handleYearChange = async (event) => {
@@ -164,29 +162,6 @@ export default function HomePage() {
       className="container"
       style={{ maxWidth: "500px", margin: "50px auto", textAlign: "center" }}
     >
-      {/* <h1>Upload a File</h1>
-      <input
-        type="file"
-        onChange={handleFileChange}
-        style={{ marginBottom: "20px" }}
-      />
-      <br />
-      <button
-        onClick={handleUpload}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#0070f3",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Upload
-      </button>
-      <p style={{ marginTop: "20px", whiteSpace: "pre-wrap" }}>
-        {uploadStatus}
-      </p> */}
 
       <div>
         <label className="block text-sm font-medium mb-1">Clients :</label>{" "}

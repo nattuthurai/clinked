@@ -261,33 +261,6 @@ async function processPrintBatch(dataArray, token) {
 // Delay function to wait for a specified number of milliseconds
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/*async function BatchStatusResult(token,batchResult) {
-  const batchResultArray = batchResult.split(",");
-  let isComplete = false;
-  if (batchResultArray.length > 0) {
-    for (const executionID of batchResultArray) {
-      const batchStatusResult = await BatchStatus(token, executionID);
-      const outputStatusResult = await batchStatusResult.json();
-
-      if (outputStatusResult.BatchStatusDescription == "Complete") {
-        batchResult=true;
-        console.log(
-          "BatchStatusDescription:" + outputStatusResult.BatchStatusDescription
-        );
-      } else {
-        console.log(
-          "BatchStatusDescription:" + outputStatusResult.BatchStatusDescription
-        );
-        break;
-      }
-
-      console.log("batchStatusResult" + outputStatusResult);
-      //return NextResponse.json(outputStatusResult, { status: 200 });
-    }
-  }
-  return isComplete;
-}*/
-
 async function BatchStatusResult(token, batchResult) {
   const batchResultArray = batchResult.split(",");
   let isComplete = false;
@@ -411,8 +384,6 @@ async function processData(myDataArray, token) {
 
       if (data.id != null) {
         try {
-          //const apiUrl ="https://api.clinked.com/v3/groups/114020/files/12144164";
-          //const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12673228";
           //const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12674786";
           const apiUrl =`https://api.clinked.com/v3/groups/${groupId}/files/${fileId}`;
 
@@ -495,23 +466,10 @@ export async function GET(request) {
     );
     if (sharedDataResponse.ok) {
       const sharedDataResult = await sharedDataResponse.json();
-      //console.log("sharedDataResult:" + sharedDataResult);
 
       taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
       taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
-
-      // console.log(
-      //   "sharedDataResult TaxReturnsClientsCopy:" +
-      //     sharedDataResult.TaxReturnsClientsCopy
-      // );
-      // console.log(
-      //   "sharedDataResult TaxReturnsAccountantsCopy:" +
-      //     sharedDataResult.TaxReturnsAccountantsCopy
-      // );
     }
-
-    //console.log("year"+year);
-    //console.log("yeclientCodear"+clientCode);
 
     const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/Returns?$filter=${filterReq}`;
 
