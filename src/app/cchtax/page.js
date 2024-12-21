@@ -6,7 +6,9 @@ import Image from "next/image";
 export default function HomePage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+  const [loading3, setLoading3] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("");
   const [dataDropdown, setDataDropdown] = useState([]);
@@ -63,10 +65,10 @@ export default function HomePage() {
 
   const handleDownload = async (event) => {
     event.preventDefault();
-
+    setLoading3(true); // Show spinner when the operation starts
     try {
       const response = await fetch(
-        `/api/fileDownload?groupID=${selectedValue}&fileID=${event.target.id}`
+        `/api/cchFileDownload?clientName=${selectedText}&fileID=${event.target.id}`
       );
       if (!response.ok) {
         throw new Error("Failed to download the file");
@@ -91,6 +93,7 @@ export default function HomePage() {
       //setError(err.message);
       console.error("Error downloading file:", err);
     } finally {
+      setLoading3(false); // Hide spinner when the operation finishes
     }
   };
 
@@ -101,7 +104,7 @@ export default function HomePage() {
   };
 
   const FetchTaxFolder = async () => {
-    setLoading(true); // Show spinner when the operation starts
+    setLoading2(true); // Show spinner when the operation starts
     let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
     const taxDataResponse = await fetch(`/api/getTaxFolder?query=${query}`);
     if (taxDataResponse.ok) {
@@ -109,7 +112,7 @@ export default function HomePage() {
       setSharedData(taxDataResult);
       console.log("taxDataResult:" + taxDataResult);
     }
-    setLoading(false); // Hide spinner when the operation finishes
+    setLoading2(false); // Hide spinner when the operation finishes
   };
 
   useEffect(() => {
@@ -195,32 +198,46 @@ export default function HomePage() {
     }
   };
 
-  const handleAuth = async () => {
-    try {
-      setLoading(true); // Show spinner when the operation starts
-      //let filterInfo = "TaxYear eq '2023'";
-      let filterInfo = `TaxYear eq '${selectedYearValue}' and ClientID eq '${selectedValue}'`;
-      let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
-      const response = await fetch(
-        `/api/getAccessToken?filter=${filterInfo}&query=${query}`,
-        {
-          method: "GET",
-        }
-      );
+  const handlePrint = async () => {
+    if (selectedValue === "Select Client") {
+      setError("Please select a value from the clients dropdown.");
+    } else if (selectedYearValue === "Select Year") {
+      setError("Please select a value from the years dropdown.");
+    } else {
+      try {
+        setError("");
+        setLoading1(true); // Show spinner when the operation starts
+        //let filterInfo = "TaxYear eq '2023'";
+        let filterInfo = `TaxYear eq '${selectedYearValue}' and ClientID eq '${selectedValue}'`;
+        let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
+        const response = await fetch(
+          `/api/getAccessToken?filter=${filterInfo}&query=${query}`,
+          {
+            method: "GET",
+          }
+        );
 
-      const result = await response.json();
-      setLoading(false); // Hide spinner when the operation finishes
-      FetchTaxFolder();
-      setData(result);
+        const result = await response.json();
+        setLoading1(false); // Hide spinner when the operation finishes
+        FetchTaxFolder();
+        setData(result);
 
-      // console.log("result" + result);
-    } catch (err) {
-      setError("Failed to fetch data");
+        // console.log("result" + result);
+      } catch (err) {
+        setError("Failed to fetch data");
+      }
     }
   };
 
   const handleFetch = async () => {
-    FetchTaxFolder();
+    if (selectedValue === "Select Client") {
+      setError("Please select a value from the clients dropdown.");
+    } else if (selectedYearValue === "Select Year") {
+      setError("Please select a value from the years dropdown.");
+    } else {
+      setError("");
+      FetchTaxFolder();
+    }
   };
 
   return (
@@ -264,18 +281,19 @@ export default function HomePage() {
             </div>
             <div className="col-span-2 flex justify-center gap-4 mt-4">
               <button
-                onClick={handleAuth}
-                disabled={loading}
+                onClick={handlePrint}
+                disabled={loading1}
                 className="w-48 py-2.5 px-5 bg-pink-900 text-white font-bold focus:outline-none rounded-lg border border-gray-200 hover:bg-pink-700 focus:ring-4 focus:ring-gray-100"
               >
-                {loading ? "Processing..." : "Print Files"}
+                {loading1 ? "Processing..." : "Print Files"}
               </button>
 
               <button
                 onClick={handleFetch}
+                disabled={loading2}
                 className="w-48 py-2.5 px-5 bg-pink-900 text-white font-bold focus:outline-none rounded-lg border border-gray-200 hover:bg-pink-700 focus:ring-4 focus:ring-gray-100"
               >
-                {loading ? "Processing..." : "Fetch Files"}
+                {loading2 ? "Processing..." : "Fetch Files"}
               </button>
             </div>
           </div>
@@ -283,7 +301,9 @@ export default function HomePage() {
           {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
           {error && <p style={{ color: "red" }}>{error}</p>}
           {/* Spinner component */}
-          {loading && <PuffLoader color="#0070f3" size={60} />}
+          {loading1 && <PuffLoader color="#0070f3" size={60} />}
+          {loading2 && <PuffLoader color="#0070f3" size={60} />}
+          {loading3 && <PuffLoader color="#0070f3" size={60} />}
         </div>
         <div className="bg-white mt-6 p-6 rounded-lg shadow-md w-full">
           <div className="overflow-x-auto">

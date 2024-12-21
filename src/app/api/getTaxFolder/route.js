@@ -4,11 +4,12 @@ const BEARER_TOKEN = process.env.TOKEN;
 let arrayObject = [];
 
 // Function to add a new object to the array
-function addToArray(fileName, size) {
+function addToArray(id,fileName, size) {
   // Create a new object
 
   if (fileName != "View Download or Share Documents in this folder.png") {
     const newObject = {
+      id:id,
       fileName: fileName,
       size: size,
     };
@@ -25,6 +26,8 @@ export async function GET(request) {
   const baseHeaders = {
     Authorization: `Bearer ${BEARER_TOKEN}`, // Use environment variables in production
   };
+
+  arrayObject = [];
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query");
@@ -145,16 +148,7 @@ export async function GET(request) {
     const apiData1 = await apiResponse1.json();
 
     apiData1.items.forEach((item) => {
-      // console.log("ID:", item.id);
-      // console.log("Friendly Name:", item.friendlyName);
-      // console.log("Content Type:", item.contentType);
-      // console.log("Size:", item.size, "bytes");
-      // console.log("Uploaded By:", item.uploaded.user.name);
-      // console.log("Group:", item.group.friendlyName);
-      // console.log("Last Modified:", new Date(item.lastModified).toLocaleString());
-      // console.log("-----------------------------");
-
-      addToArray(item.friendlyName, item.size);
+      addToArray(item.id,item.friendlyName, item.size);
     });
 
     // Fetch data from the API2 API
@@ -169,16 +163,7 @@ export async function GET(request) {
     const apiData2 = await apiResponse2.json();
 
     apiData2.items.forEach((item) => {
-      // console.log("ID:", item.id);
-      // console.log("Friendly Name:", item.friendlyName);
-      // console.log("Content Type:", item.contentType);
-      // console.log("Size:", item.size, "bytes");
-      // console.log("Uploaded By:", item.uploaded.user.name);
-      // console.log("Group:", item.group.friendlyName);
-      // console.log("Last Modified:", new Date(item.lastModified).toLocaleString());
-      // console.log("-----------------------------");
-
-      addToArray(item.friendlyName, item.size);
+      addToArray(item.id,item.friendlyName, item.size);
     });
 
     //const mergedItems = [...apiData1.items, ...apiData2.items];
