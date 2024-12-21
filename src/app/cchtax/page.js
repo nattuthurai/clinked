@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { PuffLoader } from "react-spinners";
+import Image from "next/image";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
@@ -14,10 +15,42 @@ export default function HomePage() {
   const [selectedValue, setSelectedValue] = useState("Select Client");
   const [selectedYearValue, setSelectedYearValue] = useState("Select Year");
   const [selectedText, setSelectedText] = useState("");
+  const [sharedData, setSharedData] = useState([]);
 
   // Handle file selection
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+  };
+
+  // Helper function to format file size
+  const formatSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} bytes`;
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(2)} KB`;
+    const mb = kb / 1024;
+    if (mb < 1024) return `${mb.toFixed(2)} MB`;
+    const gb = mb / 1024;
+    return `${gb.toFixed(2)} GB`;
+  };
+
+  // Convert `lastModified` from epoch to readable date
+  const formatDate = (timestamp) => {
+    if (!timestamp) return "N/A"; // Handle undefined timestamps
+    const date = new Date(timestamp);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  };
+
+  const convertToTimestamp = (dateStr) => {
+    try {
+      const date = new Date(dateStr); // Parse the date string
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid date format");
+      }
+      return date.getTime(); // Get the timestamp in milliseconds
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   };
 
   const handleChange = async (event) => {
@@ -28,10 +61,55 @@ export default function HomePage() {
     }
   };
 
+  const handleDownload = async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetch(
+        `/api/fileDownload?groupID=${selectedValue}&fileID=${event.target.id}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to download the file");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+
+      // Extract filename from Content-Disposition header if available
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const fileName = contentDisposition
+        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+        : "downloaded_file";
+
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      //setError(err.message);
+      console.error("Error downloading file:", err);
+    } finally {
+    }
+  };
+
   const handleYearChange = async (event) => {
     const selectedYear = event.target.value;
     setSelectedYearValue(selectedYear);
     console.log("selectedYear:" + selectedYear);
+  };
+
+  const FetchTaxFolder = async () => {
+    setLoading(true); // Show spinner when the operation starts
+    let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
+    const taxDataResponse = await fetch(`/api/getTaxFolder?query=${query}`);
+    if (taxDataResponse.ok) {
+      const taxDataResult = await taxDataResponse.json();
+      setSharedData(taxDataResult);
+      console.log("taxDataResult:" + taxDataResult);
+    }
+    setLoading(false); // Hide spinner when the operation finishes
   };
 
   useEffect(() => {
@@ -46,11 +124,6 @@ export default function HomePage() {
         const dropdownYearData = [];
 
         dataClient.value.forEach((item) => {
-          //console.log("ClientID:"+item.fields?.ClientID);
-          //console.log("ClientName:"+item.fields?.ClientName);
-          //console.log("ClientType:"+item.fields?.ClientType);
-          //console.log("Year:"+item.fields?.Year);
-
           dropdownData.push({
             value: item.fields?.ClientID,
             label: item.fields?.ClientName,
@@ -136,20 +209,9 @@ export default function HomePage() {
       );
 
       const result = await response.json();
-      setData(result);
       setLoading(false); // Hide spinner when the operation finishes
-      /*const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const fileName = contentDisposition
-        ? contentDisposition.split("filename=")[1].replace(/"/g, "")
-        : "downloaded_file";
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();*/
+      FetchTaxFolder();
+      setData(result);
 
       // console.log("result" + result);
     } catch (err) {
@@ -157,12 +219,15 @@ export default function HomePage() {
     }
   };
 
+  const handleFetch = async () => {
+    FetchTaxFolder();
+  };
+
   return (
     <div
       className="container"
       style={{ maxWidth: "500px", margin: "50px auto", textAlign: "center" }}
     >
-
       <div>
         <label className="block text-sm font-medium mb-1">Clients :</label>{" "}
         <select
@@ -179,7 +244,6 @@ export default function HomePage() {
           ))}
         </select>
       </div>
-
       <div>
         <label className="block text-sm font-medium mb-1">Year :</label>{" "}
         <select
@@ -196,7 +260,6 @@ export default function HomePage() {
           ))}
         </select>
       </div>
-
       <button
         onClick={handleAuth}
         disabled={loading}
@@ -213,11 +276,91 @@ export default function HomePage() {
       >
         {loading ? "Processing..." : "Print Files"}
       </button>
+      &nbsp;
+      <button
+        onClick={handleFetch}
+        style={{
+          padding: "0.75rem 1.5rem",
+          fontSize: "1rem",
+          cursor: loading ? "not-allowed" : "pointer",
+          backgroundColor: loading ? "#aaa" : "#0070f3",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          marginBottom: "1rem",
+        }}
+      >
+        {loading ? "Processing..." : "Fetch Files"}
+      </button>
+      <div className="bg-white mt-1 ml-4 mr-4 p-6 rounded-lg shadow-md">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300 text-left text-sm">
+            {sharedData.length > 0 && (
+              <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    #
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    File Name
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Size (Bytes)
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Download
+                  </th>
+                </tr>
+              </thead>
+            )}
 
+            <tbody>
+              {sharedData &&
+                sharedData?.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    style={{
+                      backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
+                      border: "1px solid #ddd",
+                    }}
+                  >
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {index + 1}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {item.fileName || "N/A"}
+                    </td>
+                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
+                      {formatSize(item.size) || "N/A"}
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Image
+                        src="/download.png"
+                        alt="Download"
+                        width={24}
+                        height={24}
+                        id={item.id}
+                        onClick={handleDownload}
+                        style={{
+                          cursor: "pointer",
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
-
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       {/* Spinner component */}
       {loading && <PuffLoader color="#0070f3" size={60} />}
     </div>

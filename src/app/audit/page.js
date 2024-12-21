@@ -409,15 +409,8 @@ export default function AuditTrail() {
           let strEndDate = selectedEndDate;
           let memeberName = null;
 
-          //console.log("strStartDate:" + strStartDate);
-          //console.log("strEndDate:" + strEndDate);
-
           const startDate = convertToTimestamp(strStartDate);
           const endDate = convertToTimestamp(strEndDate);
-
-          //console.log("startDate:" + startDate);
-          //console.log("endDate:" + endDate);
-          //console.log("selectedMember" + selectedMember);
 
           if (selectedMember != "Select User") {
             memeberName = selectedMember;
