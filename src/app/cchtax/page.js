@@ -224,145 +224,150 @@ export default function HomePage() {
   };
 
   return (
-    <div
-      className="container"
-      style={{ maxWidth: "500px", margin: "50px auto", textAlign: "center" }}
-    >
-      <div>
-        <label className="block text-sm font-medium mb-1">Clients :</label>{" "}
-        <select
-          id="option"
-          value={selectedValue}
-          onChange={handleChange}
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-        >
-          <option value="">Select Client</option>
-          {dataDropdown.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Year :</label>{" "}
-        <select
-          id="dropdownYear"
-          value={selectedYearValue}
-          onChange={handleYearChange}
-          className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-        >
-          <option value="">Select Year</option>
-          {dataYearDropdown.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        onClick={handleAuth}
-        disabled={loading}
-        style={{
-          padding: "0.75rem 1.5rem",
-          fontSize: "1rem",
-          cursor: loading ? "not-allowed" : "pointer",
-          backgroundColor: loading ? "#aaa" : "#0070f3",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          marginBottom: "1rem",
-        }}
-      >
-        {loading ? "Processing..." : "Print Files"}
-      </button>
-      &nbsp;
-      <button
-        onClick={handleFetch}
-        style={{
-          padding: "0.75rem 1.5rem",
-          fontSize: "1rem",
-          cursor: loading ? "not-allowed" : "pointer",
-          backgroundColor: loading ? "#aaa" : "#0070f3",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          marginBottom: "1rem",
-        }}
-      >
-        {loading ? "Processing..." : "Fetch Files"}
-      </button>
-      <div className="bg-white mt-1 ml-4 mr-4 p-6 rounded-lg shadow-md">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300 text-left text-sm">
-            {sharedData.length > 0 && (
-              <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">
-                    #
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    File Name
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Size (Bytes)
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Download
-                  </th>
-                </tr>
-              </thead>
-            )}
+    <main className="flex-1 bg-gray-100 min-h-screen ">
+      <div className=" mx-auto py-8 p-4 px-4">
+        <div className="bg-gray-50 p-6 w-full  rounded-lg shadow-md">
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-bold   mb-1">
+                Clients :
+              </label>{" "}
+              <select
+                id="option"
+                value={selectedValue}
+                onChange={handleChange}
+                className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              >
+                <option value="">Select Client</option>
+                {dataDropdown.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1">Year :</label>{" "}
+              <select
+                id="dropdownYear"
+                value={selectedYearValue}
+                onChange={handleYearChange}
+                className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              >
+                <option value="">Select Year</option>
+                {dataYearDropdown.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2 flex justify-center gap-4 mt-4">
+              <button
+                onClick={handleAuth}
+                disabled={loading}
+                className="w-48 py-2.5 px-5 bg-pink-900 text-white font-bold focus:outline-none rounded-lg border border-gray-200 hover:bg-pink-700 focus:ring-4 focus:ring-gray-100"
+              >
+                {loading ? "Processing..." : "Print Files"}
+              </button>
 
-            <tbody>
-              {sharedData &&
-                sharedData?.map((item, index) => (
-                  <tr
-                    key={item.id}
-                    style={{
-                      backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
-                      border: "1px solid #ddd",
-                    }}
-                  >
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {index + 1}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {item.fileName || "N/A"}
-                    </td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      {formatSize(item.size) || "N/A"}
-                    </td>
-                    <td
+              <button
+                onClick={handleFetch}
+                className="w-48 py-2.5 px-5 bg-pink-900 text-white font-bold focus:outline-none rounded-lg border border-gray-200 hover:bg-pink-700 focus:ring-4 focus:ring-gray-100"
+              >
+                {loading ? "Processing..." : "Fetch Files"}
+              </button>
+            </div>
+          </div>
+
+          {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          {/* Spinner component */}
+          {loading && <PuffLoader color="#0070f3" size={60} />}
+        </div>
+        <div className="bg-white mt-6 p-6 rounded-lg shadow-md w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 text-left text-sm">
+              {sharedData.length > 0 && (
+                <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">
+                      #
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      File Name
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Size (Bytes)
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Download
+                    </th>
+                  </tr>
+                </thead>
+              )}
+
+              <tbody>
+                {sharedData &&
+                  sharedData?.map((item, index) => (
+                    <tr
+                      key={item.id}
                       style={{
-                        padding: "10px",
+                        backgroundColor: item.id % 2 === 0 ? "#fff" : "#f6f6f6",
                         border: "1px solid #ddd",
-                        display: "flex",
-                        justifyContent: "center",
                       }}
                     >
-                      <Image
-                        src="/download.png"
-                        alt="Download"
-                        width={24}
-                        height={24}
-                        id={item.id}
-                        onClick={handleDownload}
+                      <td
                         style={{
-                          cursor: "pointer",
+                          padding: "10px",
+                          border: "1px solid #ddd",
                         }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+                      >
+                        {index + 1}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                        }}
+                      >
+                        {item.fileName || "N/A"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                        }}
+                      >
+                        {formatSize(item.size) || "N/A"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Image
+                          src="/download.png"
+                          alt="Download"
+                          width={24}
+                          height={24}
+                          id={item.id}
+                          onClick={handleDownload}
+                          style={{
+                            cursor: "pointer",
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {/* Spinner component */}
-      {loading && <PuffLoader color="#0070f3" size={60} />}
-    </div>
+    </main>
   );
 }
