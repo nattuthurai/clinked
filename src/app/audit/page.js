@@ -102,7 +102,9 @@ export default function AuditTrail() {
     const exists = dropdown.some((entry) => entry.label === newEntry.label);
 
     if (!exists) {
-      dropdown.push(newEntry);
+      if (item != "") {
+        dropdown.push(newEntry);
+      }
     }
 
     return dropdown;
@@ -169,6 +171,13 @@ export default function AuditTrail() {
     // Fetch initial dropdown data
     const fetchData = async () => {
       try {
+        const responseSalesForce = await fetch(`/api/getSalesForce`);
+        if (!responseSalesForce.ok)
+          throw new Error(await responseSalesForce.text());
+        const dataResponseSalesForce = await responseSalesForce.json();
+
+        //console.log("dataResponseSalesForce:"+dataResponseSalesForce);
+
         const storedName = localStorage.getItem("UserName");
         //console.log("storedName"+storedName);
         setUserName(storedName);
@@ -198,42 +207,76 @@ export default function AuditTrail() {
         const ConstructClientMapping = [];
 
         let inc = 1;
-        dataClient.value.forEach((item) => {
-          //dropdownDataTaxPreparer.push({ value: inc, label: item.fields?.TaxPreparer });
-          //dropdownDataTaxReviewer.push({ value: inc, label: item.fields?.TaxReviewer });
-          //dropdownDataAccountManager.push({ value: inc, label: item.fields?.AccountManager });
-          //dropdownDataAccountRepresentative.push({ value: inc, label: item.fields?.AccountRepresentative });
 
+        dataResponseSalesForce.records.forEach((item) => {
           addUniqueDropdown(
             dropdownDataTaxPreparer,
             inc,
-            item.fields?.TaxPreparer
+            item.Tax_Preparer__r ? item.Tax_Preparer__r.Name : ""
           );
           addUniqueDropdown(
             dropdownDataTaxReviewer,
             inc,
-            item.fields?.TaxReviewer
+            item.Tax_Reviewer__r ? item.Tax_Reviewer__r.Name : ""
           );
           addUniqueDropdown(
             dropdownDataAccountManager,
             inc,
-            item.fields?.AccountManager
+            item.Account_Manager__r ? item.Account_Manager__r.Name : ""
           );
           addUniqueDropdown(
             dropdownDataAccountRepresentative,
             inc,
-            item.fields?.AccountRepresentative
+            item.Account_Representative__r
+              ? item.Account_Representative__r.Name
+              : ""
           );
           inc++;
 
           ConstructClientMapping.push({
-            ClientName: item.fields?.ClientName,
-            AccountManager: item.fields?.AccountManager,
-            AccountRepresentative: item.fields?.AccountRepresentative,
-            TaxPreparer: item.fields?.TaxPreparer,
-            TaxReviewer: item.fields?.TaxReviewer,
+            ClientName: item.Name,
+            AccountManager: item.Account_Manager__r
+              ? item.Account_Manager__r.Name
+              : "",
+            AccountRepresentative: item.Account_Representative__r
+              ? item.Account_Representative__r.Name
+              : "",
+            TaxPreparer: item.Tax_Preparer__r ? item.Tax_Preparer__r.Name : "",
+            TaxReviewer: item.Tax_Reviewer__r ? item.Tax_Reviewer__r.Name : "",
           });
         });
+
+        // dataClient.value.forEach((item) => {
+        //   addUniqueDropdown(
+        //     dropdownDataTaxPreparer,
+        //     inc,
+        //     item.fields?.TaxPreparer
+        //   );
+        //   addUniqueDropdown(
+        //     dropdownDataTaxReviewer,
+        //     inc,
+        //     item.fields?.TaxReviewer
+        //   );
+        //   addUniqueDropdown(
+        //     dropdownDataAccountManager,
+        //     inc,
+        //     item.fields?.AccountManager
+        //   );
+        //   addUniqueDropdown(
+        //     dropdownDataAccountRepresentative,
+        //     inc,
+        //     item.fields?.AccountRepresentative
+        //   );
+        //   inc++;
+
+        //   ConstructClientMapping.push({
+        //     ClientName: item.fields?.ClientName,
+        //     AccountManager: item.fields?.AccountManager,
+        //     AccountRepresentative: item.fields?.AccountRepresentative,
+        //     TaxPreparer: item.fields?.TaxPreparer,
+        //     TaxReviewer: item.fields?.TaxReviewer,
+        //   });
+        // });
 
         setDataClientMapping(ConstructClientMapping);
 

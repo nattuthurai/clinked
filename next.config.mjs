@@ -12,6 +12,10 @@ const nextConfig = {
         CCH_PASSWORD: process.env.CCH_PASSWORD,
         CCH_CLIENTS_ID: process.env.CCH_CLIENTS_ID,
         NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+        SALESFORCE_CLIENT_ID: process.env.SALESFORCE_CLIENT_ID,
+        SALESFORCE_CLIENT_SECRET: process.env.SALESFORCE_CLIENT_SECRET,
+        SALESFORCE_USERNAME: process.env.SALESFORCE_USERNAME,
+        SALESFORCE_PASSWORD: process.env.SALESFORCE_PASSWORD,
     },
     
 };

@@ -32,7 +32,7 @@ async function getAccessToken() {
   return data.access_token;
 }
 
-export async function GET(req) {
+  export async function GET(req) {
     try {
       // Parse query parameters from the request
       const { searchParams } = new URL(req.url);
