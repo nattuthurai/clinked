@@ -17,7 +17,7 @@ const nextConfig = {
         SALESFORCE_USERNAME: process.env.SALESFORCE_USERNAME,
         SALESFORCE_PASSWORD: process.env.SALESFORCE_PASSWORD,
     },
-    
+    reactStrictMode: false,
 };
 
 export default nextConfig;

@@ -175,25 +175,16 @@ export default function AuditTrail() {
         if (!responseSalesForce.ok)
           throw new Error(await responseSalesForce.text());
         const dataResponseSalesForce = await responseSalesForce.json();
-
         //console.log("dataResponseSalesForce:"+dataResponseSalesForce);
 
         const storedName = localStorage.getItem("UserName");
         //console.log("storedName"+storedName);
         setUserName(storedName);
 
-        const responseClient = await fetch(`/api/getSharePointClientName`);
-        if (!responseClient.ok) throw new Error(await responseClient.text());
-        const dataClient = await responseClient.json();
+        //const responseClient = await fetch(`/api/getSharePointClientName`);
+        //if (!responseClient.ok) throw new Error(await responseClient.text());
+        //const dataClient = await responseClient.json();
         //console.log(dataClient.value);
-
-        const response = await fetch("/api/client");
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
-        const result = await response.json();
-
-        setDataClientName(result);
 
         //setDataDropdown(
         //  result.map((item) => ({ value: item.id, label: item.friendlyName }))
@@ -233,8 +224,14 @@ export default function AuditTrail() {
           );
           inc++;
 
+          const efmClientNumber = item.EFM_Client_Number__c ? parseInt(item.EFM_Client_Number__c, 10) : "N/A";
+          let clinkedClientName = item.Name +" - "+efmClientNumber;
+          //console.log("clinkedClientName:"+clinkedClientName);
+
+          //console.log("hello");
+
           ConstructClientMapping.push({
-            ClientName: item.Name,
+            ClientName: clinkedClientName,
             AccountManager: item.Account_Manager__r
               ? item.Account_Manager__r.Name
               : "",
@@ -279,12 +276,20 @@ export default function AuditTrail() {
         // });
 
         setDataClientMapping(ConstructClientMapping);
-
+        
         //console.log("DataClientMapping" + dataClientMapping);
         //console.log(dropdownDataTaxPreparer);
         //console.log(dropdownDataTaxReviewer);
         //console.log(dropdownDataAccountManager);
         //console.log(dropdownDataAccountRepresentative);
+
+        const response = await fetch("/api/client");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+        const result = await response.json();
+        setDataClientName(result);
+        setData(result);
 
         const dropdownData = [];
         result.forEach((item) => {
@@ -306,7 +311,6 @@ export default function AuditTrail() {
         setDataDropdownAccountManager(dropdownDataAccountManager);
         setDataDropdownAccountRepresentative(dropdownDataAccountRepresentative);
 
-        setData(result);
       } catch (err) {
         //setError(err.message);
       } finally {
