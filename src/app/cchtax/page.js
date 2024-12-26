@@ -118,18 +118,32 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const responseClient = await fetch(`/api/getCCHClientDetails`);
-        if (!responseClient.ok) throw new Error(await responseClient.text());
-        const dataClient = await responseClient.json();
-        console.log(dataClient.value);
+        // const responseClient = await fetch(`/api/getCCHClientDetails`);
+        // if (!responseClient.ok) throw new Error(await responseClient.text());
+        // const dataClient = await responseClient.json();
+        // console.log(dataClient.value);
+
+        const responseSalesForce = await fetch(`/api/getSalesForce`);
+        if (!responseSalesForce.ok)
+          throw new Error(await responseSalesForce.text());
+        const dataResponseSalesForce = await responseSalesForce.json();
 
         const dropdownData = [];
         const dropdownYearData = [];
 
-        dataClient.value.forEach((item) => {
+        // dataClient.value.forEach((item) => {
+        //   dropdownData.push({
+        //     value: item.fields?.ClientID,
+        //     label: item.fields?.ClientName,
+        //   });
+        // });
+
+        dataResponseSalesForce.records.forEach((item) => {
+          const efmClientNumber = item.EFM_Client_Number__c ? parseInt(item.EFM_Client_Number__c, 10) : "N/A";
+          let clinkedClientName = item.Name +" - "+efmClientNumber;
           dropdownData.push({
-            value: item.fields?.ClientID,
-            label: item.fields?.ClientName,
+            value: item.EFM_Client_Number__c,
+            label: clinkedClientName,
           });
         });
 
