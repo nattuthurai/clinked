@@ -9,6 +9,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
   const year = String(searchParams.get("year"));
+  const clientType = String(searchParams.get("client"));
 
   if (!groupId) {
     return new Response(
@@ -23,7 +24,18 @@ export async function GET(request) {
     );
   }
 
-  const firstApiUrl = `https://api.clinked.app/v3/groups/${groupId}/files?path=10_tax_returns`;
+  let pathName ='';
+  if(clientType.toUpperCase().includes("INDIVIDUAL"))
+  {
+    pathName="04_tax_returns";
+  }
+  else
+  {
+    pathName="10_tax_returns";
+  }
+
+  //const firstApiUrl = `https://api.clinked.app/v3/groups/${groupId}/files?path=10_tax_returns`;
+  const firstApiUrl = `https://api.clinked.app/v3/groups/${groupId}/files?path=`+pathName;
 
   try {
     // Fetch data from the first API

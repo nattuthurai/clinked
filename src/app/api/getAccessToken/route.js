@@ -296,13 +296,14 @@ async function BatchStatusResult(token, batchResult) {
   return isComplete;
 }
 
-function addData(executionID, batchItemGuid, fileName,groupId,fileId) {
+function addData(executionID, batchItemGuid, fileName, groupId, fileId,strFriendlyName) {
   const newItem = {
     executionID: executionID,
     batchItemGuid: batchItemGuid,
     fileName: fileName,
     groupId: groupId,
     fileId: fileId,
+    strFriendlyName:strFriendlyName,
   };
 
   // Push the new object into the array
@@ -316,6 +317,7 @@ async function processData(myDataArray, token) {
     const BatchGuid = item.executionID;
     const groupId = item.groupId;
     const fileId = item.fileId;
+    const strFriendlyName = item.strFriendlyName;
 
     const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/BatchOutputDownloadFile`;
 
@@ -385,10 +387,17 @@ async function processData(myDataArray, token) {
       if (data.id != null) {
         try {
           //const apiUrl ="https://api.clinked.com/v3/groups/116267/files/12674786";
-          const apiUrl =`https://api.clinked.com/v3/groups/${groupId}/files/${fileId}`;
+          const apiUrl = `https://api.clinked.com/v3/groups/${groupId}/files/${fileId}`;
+
+          // const payload = {
+          //   friendlyName: fileName,
+          //   tempFile: data.id,
+          //   sharing: "MEMBERS",
+          //   memberPermission: 8,
+          // };
 
           const payload = {
-            friendlyName: fileName,
+            friendlyName: strFriendlyName,
             tempFile: data.id,
             sharing: "MEMBERS",
             memberPermission: 8,
@@ -434,8 +443,8 @@ export async function GET(request) {
     const filterReq = searchParams.get("filter");
     const query = searchParams.get("query");
     const cleanedData = query.replace(/'/g, "");
-    let taxReturnsClientsCopy="";
-    let taxReturnsAccountantsCopy="";
+    let taxReturnsClientsCopy = "";
+    let taxReturnsAccountantsCopy = "";
     //console.log(cleanedData)
 
     const [year, clientCode, clientName] = cleanedData.split("|");
@@ -449,7 +458,7 @@ export async function GET(request) {
     const result = await responseClient.json();
     //console.log("result:"+result);
 
-    console.log("clientName" + clientName);
+    console.log("clientName:" + clientName);
 
     let groupId = "";
 
@@ -460,7 +469,7 @@ export async function GET(request) {
     });
 
     //console.log("groupId:" + groupId);
-
+    /*
     const sharedDataResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}`
     );
@@ -470,6 +479,7 @@ export async function GET(request) {
       taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
       taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
     }
+*/
 
     const apiUrl = `https://api.cchaxcess.com/taxservices/oiptax/api/v1/Returns?$filter=${filterReq}`;
 
@@ -492,6 +502,27 @@ export async function GET(request) {
     let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
     //console.log("Retrieved IDss:", dataString);
 
+    let dataReturnType = data.Returns.map((item) => `${item.ReturnType}`).join(
+      ","
+    );
+    const dataReturnTypeArray = dataReturnType.split(",");
+
+    let returnClientType = "";
+    for (const arrayItem of dataReturnTypeArray) {
+      console.log("arryItem:" + arrayItem);
+      returnClientType = arrayItem;
+    }
+
+    const sharedDataResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}&client=${returnClientType}`
+    );
+    if (sharedDataResponse.ok) {
+      const sharedDataResult = await sharedDataResponse.json();
+
+      taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
+      taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
+    }
+
     const dataArray = dataString.split(",");
     const batchResult = await processPrintBatch(dataArray, token);
     //console.log("batchResult Output" + batchResult);
@@ -511,16 +542,78 @@ export async function GET(request) {
           const outputBatchOutputFilesResult =
             await batchOutputFilesResult.json();
 
+          let strFriendlyName = "";
+          let strClientType = "";
+          if (returnClientType.toUpperCase().includes("INDIVIDUAL")) {
+            strClientType = "Individual";
+          } else if (returnClientType.toUpperCase().includes("PARTNERSHIP")) {
+            strClientType = "Partnership";
+          } else if (returnClientType.toUpperCase().includes("S-CORPORATE")) {
+            strClientType = "S-Corporate";
+          }
+
           outputBatchOutputFilesResult.forEach((item) => {
-            if(item.FileName.toUpperCase().includes("GOVT")||item.FileName.toUpperCase().includes("ACCT"))
-            {
-              addData(executionID, item.BatchItemGuid, item.FileName,groupId,taxReturnsAccountantsCopy);
+            if (
+              item.FileName.toUpperCase().includes("GOVT") ||
+              item.FileName.toUpperCase().includes("CLNT")
+            ) {
+              if (item.FileName.toUpperCase().includes("GOVT")) {
+                strFriendlyName =
+                  year +
+                  " " +
+                  strClientType +
+                  " " +
+                  clientCode +
+                  " (" +
+                  clientName +
+                  ") " +
+                  " Government Copy.pdf";
+              } else if (item.FileName.toUpperCase().includes("CLNT")) {
+                strFriendlyName =
+                  year +
+                  " " +
+                  strClientType +
+                  " " +
+                  clientCode +
+                  " (" +
+                  clientName +
+                  ") " +
+                  " Client Copy.pdf";
+              }
+
+              console.log("strFriendlyName:"+strFriendlyName);
+
+              addData(
+                executionID,
+                item.BatchItemGuid,
+                item.FileName,
+                groupId,
+                taxReturnsClientsCopy,
+                strFriendlyName
+              );
+            } else {
+              strFriendlyName =
+              year +
+              " " +
+              strClientType +
+              " " +
+              clientCode +
+              " (" +
+              clientName +
+              ") " +
+              " Account Copy.pdf";
+
+              console.log("strFriendlyName:"+strFriendlyName);
+
+              addData(
+                executionID,
+                item.BatchItemGuid,
+                item.FileName,
+                groupId,
+                taxReturnsAccountantsCopy,
+                strFriendlyName
+              );
             }
-            else
-            {
-              addData(executionID, item.BatchItemGuid, item.FileName,groupId,taxReturnsClientsCopy);
-            }
-            
           });
         }
       }

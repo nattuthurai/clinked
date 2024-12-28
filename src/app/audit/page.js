@@ -9,8 +9,15 @@ export default function AuditTrail() {
   const [sharedData, setSharedData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [useAndCondition, setUseAndCondition] = useState(false);
   const [loadData, setLoadData] = useState(false);
   const [dataDropdown, setDataDropdown] = useState([]);
+
+  const [taxPreparerCondition, setTaxPreparerCondition] = useState(false);
+  const [taxReviewerCondition, setTaxReviewerCondition] = useState(false);
+  const [accountManagerCondition, setAccountManagerCondition] = useState(false);
+  const [accountRepresentativeCondition, setAccountRepresentativeCondition] =
+    useState(false);
 
   const [dataClientMapping, setDataClientMapping] = useState([]);
   const [dataClientName, setDataClientName] = useState([]);
@@ -46,6 +53,46 @@ export default function AuditTrail() {
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
   const [selectedEndDate, setSelectedEndDate] = useState(new Date());
   const [userName, setUserName] = useState("");
+
+  const [isValidFromDate, setIsValidFromDate] = useState(null);
+
+  const handleDateChange = (date) => {
+    setSelectedStartDate(date); // Set the selected date
+    //console.log("calling before");
+    checkDateWithinThreeMonths(); // Call another method
+    //console.log("calling after");
+  };
+
+  const checkDateWithinThreeMonths = async () => {
+
+    const today = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(today.getMonth() - 3);
+
+    //console.log("selectedStartDate:"+selectedStartDate);
+
+    const selectedDate = new Date(selectedStartDate);
+
+    if (selectedDate >= threeMonthsAgo && selectedDate <= today) {
+      setIsValidFromDate(true); // Valid: within 3 months
+      //console.log("setIsValidFromDate:true");
+    } else {
+      setIsValidFromDate(false); // Invalid: not within 3 months
+      //console.log("setIsValidFromDate:false");
+    }
+  };
+
+  // Helper function to count the true conditions
+  const countTrueConditions = () => {
+    const conditions = [
+      taxPreparerCondition,
+      taxReviewerCondition,
+      accountManagerCondition,
+      accountRepresentativeCondition,
+    ];
+
+    return conditions.filter(Boolean).length; // Count true values
+  };
 
   const isWithinRange = (inputDate, startDate, endDate) => {
     const date = new Date(inputDate);
@@ -124,22 +171,84 @@ export default function AuditTrail() {
   useEffect(() => {
     //console.log("selectedValueTaxPreparer:" + selectedValueTaxPreparer);
 
-    const filteredItems = dataClientMapping.filter((item) => {
-      return (
-        item.TaxPreparer.toLowerCase().includes(
-          selectedValueTaxPreparer.toLowerCase()
-        ) &&
-        item.TaxReviewer.toLowerCase().includes(
-          selectedValueTaxReviewer.toLowerCase()
-        ) &&
-        item.AccountManager.toLowerCase().includes(
-          selectedValueAccountManager.toLowerCase()
-        ) &&
-        item.AccountRepresentative.toLowerCase().includes(
-          selectedValueAccountRepresentative.toLowerCase()
-        )
-      );
-    });
+    // const filteredItems = dataClientMapping.filter((item) => {
+    //   return (
+    //     item.TaxPreparer.toLowerCase().includes(
+    //       selectedValueTaxPreparer.toLowerCase()
+    //     ) &&
+    //     item.TaxReviewer.toLowerCase().includes(
+    //       selectedValueTaxReviewer.toLowerCase()
+    //     ) &&
+    //     item.AccountManager.toLowerCase().includes(
+    //       selectedValueAccountManager.toLowerCase()
+    //     ) &&
+    //     item.AccountRepresentative.toLowerCase().includes(
+    //       selectedValueAccountRepresentative.toLowerCase()
+    //     )
+    //   );
+    // });
+
+    // console.log("taxPreparerCondition" + taxPreparerCondition);
+    // console.log("taxReviewerCondition" + taxReviewerCondition);
+    // console.log("accountManagerCondition" + accountManagerCondition);
+    // console.log(
+    //   "accountRepresentativeCondition" + accountRepresentativeCondition
+    // );
+
+    const trueCount = countTrueConditions();
+    //console.log("trueCount" + trueCount);
+
+    let filteredItems = [];
+
+    if (trueCount === 0) {
+    } else if (trueCount === 1) {
+      setUseAndCondition(false);
+    } else {
+      setUseAndCondition(true);
+    }
+
+    if (trueCount === 0) {
+      filteredItems = dataClientMapping;
+      //console.log("trueCount === 0 section"+dataClientMapping);
+    } else {
+      //console.log("trueCount === 0 else section");
+      filteredItems = dataClientMapping.filter((item) => {
+        const conditions = [
+          item.TaxPreparer.toLowerCase().includes(
+            selectedValueTaxPreparer.toLowerCase()
+          ),
+          item.TaxReviewer.toLowerCase().includes(
+            selectedValueTaxReviewer.toLowerCase()
+          ),
+          item.AccountManager.toLowerCase().includes(
+            selectedValueAccountManager.toLowerCase()
+          ),
+          item.AccountRepresentative.toLowerCase().includes(
+            selectedValueAccountRepresentative.toLowerCase()
+          ),
+        ];
+        // Apply either `AND` or `OR` logic based on the flag
+        return useAndCondition
+          ? conditions.every(Boolean)
+          : conditions.some(Boolean);
+      });
+    }
+    // const filteredItems = dataClientMapping.filter((item) => {
+    //   return (
+    //     item.TaxPreparer.toLowerCase().includes(
+    //       selectedValueTaxPreparer.toLowerCase()
+    //     ) ||
+    //     item.TaxReviewer.toLowerCase().includes(
+    //       selectedValueTaxReviewer.toLowerCase()
+    //     ) ||
+    //     item.AccountManager.toLowerCase().includes(
+    //       selectedValueAccountManager.toLowerCase()
+    //     ) ||
+    //     item.AccountRepresentative.toLowerCase().includes(
+    //       selectedValueAccountRepresentative.toLowerCase()
+    //     )
+    //   );
+    // });
 
     // filteredItems.forEach((item) => {
     //   console.log(
@@ -224,8 +333,10 @@ export default function AuditTrail() {
           );
           inc++;
 
-          const efmClientNumber = item.EFM_Client_Number__c ? parseInt(item.EFM_Client_Number__c, 10) : "N/A";
-          let clinkedClientName = item.Name +" - "+efmClientNumber;
+          const efmClientNumber = item.EFM_Client_Number__c
+            ? parseInt(item.EFM_Client_Number__c, 10)
+            : "N/A";
+          let clinkedClientName = item.Name + " - " + efmClientNumber;
           //console.log("clinkedClientName:"+clinkedClientName);
 
           //console.log("hello");
@@ -276,7 +387,9 @@ export default function AuditTrail() {
         // });
 
         setDataClientMapping(ConstructClientMapping);
-        
+
+        //console.log("ConstructClientMapping:"+ConstructClientMapping);
+
         //console.log("DataClientMapping" + dataClientMapping);
         //console.log(dropdownDataTaxPreparer);
         //console.log(dropdownDataTaxReviewer);
@@ -310,7 +423,6 @@ export default function AuditTrail() {
         setDataDropdownTaxReviewer(dropdownDataTaxReviewer);
         setDataDropdownAccountManager(dropdownDataAccountManager);
         setDataDropdownAccountRepresentative(dropdownDataAccountRepresentative);
-
       } catch (err) {
         //setError(err.message);
       } finally {
@@ -328,21 +440,49 @@ export default function AuditTrail() {
   const handleChange1 = (event) => {
     event.preventDefault();
     setSelectedValueTaxPreparer(event.target.value);
+
+    const value = event.target.value.toLowerCase();
+    if (value === "") {
+      setTaxPreparerCondition(false);
+    } else {
+      setTaxPreparerCondition(true);
+    }
   };
 
   const handleChange2 = (event) => {
     event.preventDefault();
     setSelectedValueTaxReviewer(event.target.value);
+
+    const value = event.target.value.toLowerCase();
+    if (value === "") {
+      setTaxReviewerCondition(false);
+    } else {
+      setTaxReviewerCondition(true);
+    }
   };
 
   const handleChange3 = (event) => {
     event.preventDefault();
     setSelectedValueAccountManager(event.target.value);
+
+    const value = event.target.value.toLowerCase();
+    if (value === "") {
+      setAccountManagerCondition(false);
+    } else {
+      setAccountManagerCondition(true);
+    }
   };
 
   const handleChange4 = (event) => {
     event.preventDefault();
     setSelectedValueAccountRepresentative(event.target.value);
+
+    const value = event.target.value.toLowerCase();
+    if (value === "") {
+      setAccountRepresentativeCondition(false);
+    } else {
+      setAccountRepresentativeCondition(true);
+    }
   };
 
   const handleReset = () => {
@@ -435,10 +575,17 @@ export default function AuditTrail() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    //let dateTimeReponse = await checkDateWithinThreeMonths();
+
     //console.log("selectedValue:"+selectedValue);
     if (selectedValue === "Select Client") {
       setError("Please select a value from the clients dropdown.");
-    } else {
+    } 
+    else if (isValidFromDate !== null && !isValidFromDate) {
+      setError("Please select data covering within 3 months");
+    }
+    else {
       try {
         // Fetch shared folder data for the selected group
         //console.log("selectedValue:" + selectedValue);
@@ -667,7 +814,7 @@ export default function AuditTrail() {
                   <div className="w-full p-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
                     <ReactDatePicker
                       selected={selectedStartDate}
-                      onChange={(date) => setSelectedStartDate(date)}
+                      onChange={handleDateChange}
                       dateFormat="yyyy-MM-dd"
                     />
                   </div>
