@@ -18,6 +18,7 @@ export default function HomePage() {
   const [selectedYearValue, setSelectedYearValue] = useState("Select Year");
   const [selectedText, setSelectedText] = useState("");
   const [sharedData, setSharedData] = useState([]);
+  const [formData, setFormData] = useState({ to: 'thuraiit@gmail.com', subject: 'Testing', text: 'Testing123' });
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -123,14 +124,23 @@ export default function HomePage() {
         // const dataClient = await responseClient.json();
         // console.log(dataClient.value);
 
-        const responseSalesForce = await fetch(`/api/getSalesForce`);
-        if (!responseSalesForce.ok)
-          throw new Error(await responseSalesForce.text());
-        const dataResponseSalesForce = await responseSalesForce.json();
+        // const responseSalesForce = await fetch(`/api/getSalesForce`);
+        // if (!responseSalesForce.ok)
+        //   throw new Error(await responseSalesForce.text());
+        // const dataResponseSalesForce = await responseSalesForce.json();
+
+        const response = await fetch("/api/client");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+        const result = await response.json();
 
         const dropdownData = [];
         const dropdownYearData = [];
 
+        result.forEach((item) => {
+          dropdownData.push({ value: item.id, label: item.friendlyName });
+        });
         // dataClient.value.forEach((item) => {
         //   dropdownData.push({
         //     value: item.fields?.ClientID,
@@ -138,14 +148,16 @@ export default function HomePage() {
         //   });
         // });
 
-        dataResponseSalesForce.records.forEach((item) => {
-          const efmClientNumber = item.EFM_Client_Number__c ? parseInt(item.EFM_Client_Number__c, 10) : "N/A";
-          let clinkedClientName = item.Name +" - "+efmClientNumber;
-          dropdownData.push({
-            value: item.EFM_Client_Number__c,
-            label: clinkedClientName,
-          });
-        });
+        // dataResponseSalesForce.records.forEach((item) => {
+        //   const efmClientNumber = item.EFM_Client_Number__c
+        //     ? parseInt(item.EFM_Client_Number__c, 10)
+        //     : "N/A";
+        //   let clinkedClientName = item.Name + " - " + efmClientNumber;
+        //   dropdownData.push({
+        //     value: item.EFM_Client_Number__c,
+        //     label: clinkedClientName,
+        //   });
+        // });
 
         setDataDropdown(dropdownData);
 
@@ -230,6 +242,19 @@ export default function HomePage() {
   };
 
   const handleFetch = async () => {
+    const response = await fetch("/api/sendEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      console.log("Email sent successfully!");
+    } else {
+      console.log(`Error: ${result.message}`);
+    }
+
     if (selectedValue === "Select Client") {
       setError("Please select a value from the clients dropdown.");
     } else if (selectedYearValue === "Select Year") {

@@ -16,6 +16,8 @@ const nextConfig = {
         SALESFORCE_CLIENT_SECRET: process.env.SALESFORCE_CLIENT_SECRET,
         SALESFORCE_USERNAME: process.env.SALESFORCE_USERNAME,
         SALESFORCE_PASSWORD: process.env.SALESFORCE_PASSWORD,
+        OFFICE365_USER: process.env.OFFICE365_USER,
+        OFFICE365_PASS: process.env.OFFICE365_PASS,
     },
     reactStrictMode: false,
 };

@@ -24,7 +24,7 @@ export async function GET(request) {
   }
 
   const firstApiUrl = `https://api.clinked.app/v3/groups/${groupId}/files?path=03_client_shared_folder`;
-
+  console.log("firstApiUrl:"+firstApiUrl);
   try {
     // Fetch data from the first API
     const firstResponse = await fetch(firstApiUrl, { headers: baseHeaders });
@@ -51,7 +51,7 @@ export async function GET(request) {
       );
     }
     const secondData = await secondResponse.json();
-
+    //console.log("secondData:"+JSON.stringify(secondData))
     // Return the combined result
     return new Response(JSON.stringify(secondData), {
       status: 200,

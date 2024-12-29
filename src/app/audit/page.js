@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Image from "next/image";
+import Select from "react-select";
 
 export default function AuditTrail() {
   const [data, setData] = useState(null);
@@ -34,7 +35,8 @@ export default function AuditTrail() {
 
   const [selectedOption, setSelectedOption] = useState(null);
 
-  const [selectedValue, setSelectedValue] = useState("Select Client");
+  //const [selectedValue, setSelectedValue] = useState("Select Clients");
+  const [selectedValue, setSelectedValue] = useState([]);
   const [selectedValueTaxPreparer, setSelectedValueTaxPreparer] = useState(
     "Select Tax Preparer"
   );
@@ -64,10 +66,10 @@ export default function AuditTrail() {
   };
 
   const checkDateWithinThreeMonths = async () => {
-
     const today = new Date();
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(today.getMonth() - 3);
+    //threeMonthsAgo.setMonth(today.getMonth() - 5);
 
     //console.log("selectedStartDate:"+selectedStartDate);
 
@@ -157,15 +159,42 @@ export default function AuditTrail() {
     return dropdown;
   };
 
+  // let filterItems = (mainData, name, stDate, endDate) => {
+  //   return mainData.items.filter((item) => {
+  //     const nameMatches = name ? item.uploaded.name === name : true;
+  //     const dateMatches =
+  //       stDate && endDate
+  //         ? stDate < item.lastModified && endDate > item.lastModified
+  //         : true;
+  //     return nameMatches && dateMatches;
+  //   });
+  // };
+
   let filterItems = (mainData, name, stDate, endDate) => {
-    return mainData.items.filter((item) => {
-      const nameMatches = name ? item.uploaded.name === name : true;
-      const dateMatches =
-        stDate && endDate
-          ? stDate < item.lastModified && endDate > item.lastModified
-          : true;
-      return nameMatches && dateMatches;
-    });
+    // Ensure mainData is valid
+    if (!mainData || !Array.isArray(mainData)) {
+      return [];
+    }
+
+    // Flatten all items from mainData and apply the filter
+    return mainData
+      .flatMap((data) =>
+        data.items && Array.isArray(data.items) ? data.items : []
+      )
+      .filter((item) => {
+        // Check if the name matches
+        const nameMatches = name ? item.uploaded.name === name : true;
+
+        // Check if the dates match
+        const dateMatches =
+          stDate && endDate
+            ? new Date(stDate) <= new Date(item.lastModified) &&
+              new Date(endDate) >= new Date(item.lastModified)
+            : true;
+
+        // Return items that match both conditions
+        return nameMatches && dateMatches;
+      });
   };
 
   useEffect(() => {
@@ -405,7 +434,9 @@ export default function AuditTrail() {
         setData(result);
 
         const dropdownData = [];
+        let incMe = 0;
         result.forEach((item) => {
+
           //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
           // const filteredItems = dataClient.value.filter(
           //   (itemClient) =>
@@ -414,8 +445,14 @@ export default function AuditTrail() {
           // );
           //if (filteredItems.length == 1) {
           //console.log(item.friendlyName.trim());
+          
           dropdownData.push({ value: item.id, label: item.friendlyName });
+
+          //console.log("incMe:" + incMe++);
+          //incMe = incMe+1;
+          //console.log(incMe+"-"+item.friendlyName);
           //}
+
         });
 
         setDataDropdown(dropdownData);
@@ -486,7 +523,7 @@ export default function AuditTrail() {
   };
 
   const handleReset = () => {
-    setSelectedValue("Select Client");
+    setSelectedValue("Select Clients");
     setSelectedMember("Select User");
     setError("");
 
@@ -536,33 +573,73 @@ export default function AuditTrail() {
   };
 
   const handleChange = async (event) => {
-    if (event.target.value != "") {
-      setError("");
-    }
+    // if (event.target.value != "") {
+    //   setError("");
+    // }
+    //const selectedGroupId = event.target.value;
+    //setSelectedValue(selectedGroupId);
 
-    const selectedGroupId = event.target.value;
-    setSelectedValue(selectedGroupId);
+    setSelectedValue(event || []);
+
+    //console.log("selectedValue:"+event.map((option) => option.value).join(','));
+
+    const selectedValues = event.map((option) => option.value);
+    //console.log("selectedValues:"+selectedValues);
+
+    //console.log("selectedValue:"+selectedValue.map((option) => option.label).join(','));
+    //const selectedGroupId = Array.from(event.target.selectedOptions, (option) => option.value);
+    //setSelectedValue(selectedGroupId);
+
     setSelectedMember("Select User"); // Reset member dropdown
     setSharedData([]); // Clear shared folder data
     setMembers([]); // Clear members list
     setLoading(true);
 
     try {
-      // Fetch members for the selected group
-      const membersResponse = await fetch(
-        `/api/users?groupId=${selectedGroupId}`
-      );
-      if (!membersResponse.ok) {
-        throw new Error(
-          `Failed to fetch members: ${membersResponse.statusText}`
+      try {
+        const allMembers = await Promise.all(
+          selectedValues.map(async (value) => {
+            const membersResponse = await fetch(`/api/users?groupId=${value}`);
+            if (!membersResponse.ok) {
+              throw new Error(
+                `Failed to fetch members for group ${value}: ${membersResponse.statusText}`
+              );
+            }
+            const membersResult = await membersResponse.json();
+            return membersResult.memberDetails.map((member) => ({
+              id: member.user.id,
+              name: member.user.name,
+            }));
+          })
         );
+
+        // Flatten the array of member arrays
+        const flattenedMembers = allMembers.flat();
+        const uniqueMembers = flattenedMembers.filter(
+          (member, index, self) =>
+            index === self.findIndex((m) => m.id === member.id)
+        );
+
+        setMembers(uniqueMembers);
+      } catch (error) {
+        console.error("Error fetching members:", error);
       }
-      const membersResult = await membersResponse.json();
-      const extractedMembers = membersResult.memberDetails.map((member) => ({
-        id: member.user.id,
-        name: member.user.name,
-      }));
-      setMembers(extractedMembers);
+
+      // const membersResponse = await fetch(
+      //   `/api/users?groupId=${selectedGroupId}`
+      // );
+      // if (!membersResponse.ok) {
+      //   throw new Error(
+      //     `Failed to fetch members: ${membersResponse.statusText}`
+      //   );
+      // }
+      // const membersResult = await membersResponse.json();
+      // const extractedMembers = membersResult.memberDetails.map((member) => ({
+      //   id: member.user.id,
+      //   name: member.user.name,
+      // }));
+      // setMembers(extractedMembers);
+
       setLoadData(false);
 
       //console.log("loadData:" + loadData);
@@ -573,30 +650,97 @@ export default function AuditTrail() {
     }
   };
 
+  const fetchSharedData = async () => {
+    try {
+      setError("");
+      const selectedValues = selectedValue.map((option) => option.value);
+
+      // Create an array of fetch promises
+      const promises = selectedValues.map(async (value) => {
+        const sharedDataResponse = await fetch(
+          `/api/getSharedFolder?groupId=${value}`
+        );
+        if (sharedDataResponse.ok) {
+          return await sharedDataResponse.json();
+        } else {
+          console.error(`Failed to fetch shared data for group ${value}`);
+          return [];
+        }
+      });
+
+      // Resolve all promises
+      const results = await Promise.all(promises);
+
+      // Flatten the results and set the shared data
+      const allSharedData = results.flat();
+
+      //console.log("allSharedData:"+JSON.stringify(allSharedData));
+      //setSharedData(allSharedData);
+
+      let strStartDate = selectedStartDate;
+      let strEndDate = selectedEndDate;
+      let memeberName = null;
+
+      const startDate = convertToTimestamp(strStartDate);
+      const endDate = convertToTimestamp(strEndDate);
+
+      if (selectedMember != "Select User") {
+        memeberName = selectedMember;
+      }
+
+      //console.log("memeberName:"+selectedMember);
+      //console.log("filterItems before");
+
+      const filteredItems = filterItems(
+        allSharedData,
+        memeberName,
+        startDate,
+        endDate
+      );
+
+      //console.log("filterItems after");
+      //console.log(filteredItems.length);
+
+      if (filteredItems.length == 0) {
+        setError("Search criteria don't have data");
+        console.log(filteredItems.length);
+      }
+      setSharedData(filteredItems);
+      setLoadData(true);
+    } catch (error) {
+      console.error("Error fetching shared data:", error.message);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    //let dateTimeReponse = await checkDateWithinThreeMonths();
-
-    //console.log("selectedValue:"+selectedValue);
-    if (selectedValue === "Select Client") {
+    //if (selectedValue === "Select Clients") {
+    if (selectedValue.length === 0) {
       setError("Please select a value from the clients dropdown.");
-    } 
-    else if (isValidFromDate !== null && !isValidFromDate) {
+    } else if (isValidFromDate !== null && !isValidFromDate) {
       setError("Please select data covering within 3 months");
-    }
-    else {
+    } else {
+      //const selectedValues = selectedValue.map((option) => option.value);
+      //console.log("selectedValues:"+selectedValues[0]);
+
+      await fetchSharedData();
+
+      /*
+
       try {
         // Fetch shared folder data for the selected group
         //console.log("selectedValue:" + selectedValue);
         setError("");
         const sharedDataResponse = await fetch(
-          `/api/getSharedFolder?groupId=${selectedValue}`
+          `/api/getSharedFolder?groupId=${selectedValues[0]}`
         );
         if (sharedDataResponse.ok) {
           const sharedDataResult = await sharedDataResponse.json();
           //console.log("sharedDataResult:");
           //setSharedData(sharedDataResult);
+
+          console.log("sharedDataResult:"+JSON.stringify(sharedDataResult));
 
           //------------------------------------------------------------------------------------------------------
           let strStartDate = selectedStartDate;
@@ -633,12 +777,10 @@ export default function AuditTrail() {
         //setError(err.message);
         console.log(err.message);
       }
+
+      */
     }
   };
-
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
 
   if (!data) {
     return <div>Loading...</div>;
@@ -917,7 +1059,7 @@ export default function AuditTrail() {
                   <label className="block text-sm font-medium mb-1">
                     Clients :
                   </label>{" "}
-                  <select
+                  {/* <select
                     id="dropdown"
                     value={selectedValue}
                     onChange={handleChange}
@@ -929,7 +1071,16 @@ export default function AuditTrail() {
                         {item.label}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <Select
+                    id="multi-select"
+                    isMulti
+                    options={dataDropdown}
+                    value={selectedValue}
+                    onChange={handleChange}
+                    placeholder="Select Clients"
+                    closeMenuOnSelect={false}
+                  />
                 </div>
 
                 <div>
