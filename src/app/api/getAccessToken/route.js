@@ -296,14 +296,21 @@ async function BatchStatusResult(token, batchResult) {
   return isComplete;
 }
 
-function addData(executionID, batchItemGuid, fileName, groupId, fileId,strFriendlyName) {
+function addData(
+  executionID,
+  batchItemGuid,
+  fileName,
+  groupId,
+  fileId,
+  strFriendlyName
+) {
   const newItem = {
     executionID: executionID,
     batchItemGuid: batchItemGuid,
     fileName: fileName,
     groupId: groupId,
     fileId: fileId,
-    strFriendlyName:strFriendlyName,
+    strFriendlyName: strFriendlyName,
   };
 
   // Push the new object into the array
@@ -438,10 +445,16 @@ export async function GET(request) {
     if (!token) {
       throw new Error("Failed to retrieve access token");
     }
-
+    let strClientType = "";
     const { searchParams } = new URL(request.url);
     const filterReq = searchParams.get("filter");
     const query = searchParams.get("query");
+
+    console.log("filterReq:" + filterReq);
+    console.log("query:" + query);
+
+    let nextResponseMessage = '';
+
     const cleanedData = query.replace(/'/g, "");
     let taxReturnsClientsCopy = "";
     let taxReturnsAccountantsCopy = "";
@@ -449,7 +462,9 @@ export async function GET(request) {
 
     const [year, clientCode, clientName] = cleanedData.split("|");
 
-    const responseClient = await fetch(
+    let groupId = clientCode;
+
+    /*const responseClient = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/client`
     );
     if (!responseClient.ok) {
@@ -459,16 +474,14 @@ export async function GET(request) {
     //console.log("result:"+result);
 
     console.log("clientName:" + clientName);
-
-    let groupId = "";
-
     result.map((item) => {
       if (item.friendlyName.toUpperCase().includes(clientName.toUpperCase())) {
         groupId = item.id;
       }
     });
 
-    //console.log("groupId:" + groupId);
+    console.log("groupId:" + groupId);
+    */
     /*
     const sharedDataResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}`
@@ -499,129 +512,139 @@ export async function GET(request) {
     }
 
     const data = await response.json();
-    let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
-    //console.log("Retrieved IDss:", dataString);
 
-    let dataReturnType = data.Returns.map((item) => `${item.ReturnType}`).join(
-      ","
-    );
-    const dataReturnTypeArray = dataReturnType.split(",");
+    if (data.Returns !== null) {
+      let dataString = data.Returns.map((item) => `${item.ReturnID}`).join(",");
+      //console.log("Retrieved IDss:", dataString);
 
-    let returnClientType = "";
-    for (const arrayItem of dataReturnTypeArray) {
-      console.log("arryItem:" + arrayItem);
-      returnClientType = arrayItem;
-    }
+      let dataReturnType = data.Returns.map(
+        (item) => `${item.ReturnType}`
+      ).join(",");
+      const dataReturnTypeArray = dataReturnType.split(",");
 
-    const sharedDataResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}&client=${returnClientType}`
-    );
-    if (sharedDataResponse.ok) {
-      const sharedDataResult = await sharedDataResponse.json();
+      let returnClientType = "";
+      for (const arrayItem of dataReturnTypeArray) {
+        console.log("arryItem:" + arrayItem);
+        returnClientType = arrayItem;
+      }
 
-      taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
-      taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
-    }
+      const sharedDataResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/getFileIDByList?groupId=${groupId}&year=${year}&client=${returnClientType}`
+      );
+      if (sharedDataResponse.ok) {
+        const sharedDataResult = await sharedDataResponse.json();
 
-    const dataArray = dataString.split(",");
-    const batchResult = await processPrintBatch(dataArray, token);
-    //console.log("batchResult Output" + batchResult);
+        taxReturnsClientsCopy = sharedDataResult.TaxReturnsClientsCopy;
+        taxReturnsAccountantsCopy = sharedDataResult.TaxReturnsAccountantsCopy;
+      }
 
-    const batchOutput = await BatchStatusResult(token, batchResult);
-    //console.log("batchOutput:" + batchOutput);
+      const dataArray = dataString.split(",");
+      const batchResult = await processPrintBatch(dataArray, token);
+      //console.log("batchResult Output" + batchResult);
 
-    if (batchOutput === true) {
-      if (batchResult.length > 0) {
-        const dtArray = batchResult.split(",");
+      const batchOutput = await BatchStatusResult(token, batchResult);
+      //console.log("batchOutput:" + batchOutput);
 
-        for (const executionID of dtArray) {
-          const batchOutputFilesResult = await BatchOutputFiles(
-            token,
-            executionID
-          );
-          const outputBatchOutputFilesResult =
-            await batchOutputFilesResult.json();
+      if (batchOutput === true) {
+        if (batchResult.length > 0) {
+          const dtArray = batchResult.split(",");
 
-          let strFriendlyName = "";
-          let strClientType = "";
-          if (returnClientType.toUpperCase().includes("INDIVIDUAL")) {
-            strClientType = "Individual";
-          } else if (returnClientType.toUpperCase().includes("PARTNERSHIP")) {
-            strClientType = "Partnership";
-          } else if (returnClientType.toUpperCase().includes("S-CORPORATE")) {
-            strClientType = "S-Corporate";
-          }
+          for (const executionID of dtArray) {
+            const batchOutputFilesResult = await BatchOutputFiles(
+              token,
+              executionID
+            );
+            const outputBatchOutputFilesResult =
+              await batchOutputFilesResult.json();
 
-          outputBatchOutputFilesResult.forEach((item) => {
-            if (
-              item.FileName.toUpperCase().includes("GOVT") ||
-              item.FileName.toUpperCase().includes("CLNT")
-            ) {
-              if (item.FileName.toUpperCase().includes("GOVT")) {
-                strFriendlyName =
-                  year +
-                  " " +
-                  strClientType +
-                  " " +
-                  clientCode +
-                  " (" +
-                  clientName +
-                  ") " +
-                  " Government Copy.pdf";
-              } else if (item.FileName.toUpperCase().includes("CLNT")) {
-                strFriendlyName =
-                  year +
-                  " " +
-                  strClientType +
-                  " " +
-                  clientCode +
-                  " (" +
-                  clientName +
-                  ") " +
-                  " Client Copy.pdf";
-              }
-
-              console.log("strFriendlyName:"+strFriendlyName);
-
-              addData(
-                executionID,
-                item.BatchItemGuid,
-                item.FileName,
-                groupId,
-                taxReturnsClientsCopy,
-                strFriendlyName
-              );
-            } else {
-              strFriendlyName =
-              year +
-              " " +
-              strClientType +
-              " " +
-              clientCode +
-              " (" +
-              clientName +
-              ") " +
-              " Account Copy.pdf";
-
-              console.log("strFriendlyName:"+strFriendlyName);
-
-              addData(
-                executionID,
-                item.BatchItemGuid,
-                item.FileName,
-                groupId,
-                taxReturnsAccountantsCopy,
-                strFriendlyName
-              );
+            let strFriendlyName = "";
+            //let strClientType = "";
+            if (returnClientType.toUpperCase().includes("INDIVIDUAL")) {
+              strClientType = "Individual";
+            } else if (returnClientType.toUpperCase().includes("PARTNERSHIP")) {
+              strClientType = "Partnership";
+            } else if (returnClientType.toUpperCase().includes("S-CORPORATE")) {
+              strClientType = "S-Corporate";
             }
-          });
+
+            outputBatchOutputFilesResult.forEach((item) => {
+              if (
+                item.FileName.toUpperCase().includes("GOVT") ||
+                item.FileName.toUpperCase().includes("CLNT")
+              ) {
+                if (item.FileName.toUpperCase().includes("GOVT")) {
+                  strFriendlyName =
+                    year +
+                    " " +
+                    strClientType +
+                    " " +
+                    clientCode +
+                    " (" +
+                    clientName +
+                    ") " +
+                    " Government Copy.pdf";
+                } else if (item.FileName.toUpperCase().includes("CLNT")) {
+                  strFriendlyName =
+                    year +
+                    " " +
+                    strClientType +
+                    " " +
+                    clientCode +
+                    " (" +
+                    clientName +
+                    ") " +
+                    " Client Copy.pdf";
+                }
+
+                console.log("strFriendlyName:" + strFriendlyName);
+
+                addData(
+                  executionID,
+                  item.BatchItemGuid,
+                  item.FileName,
+                  groupId,
+                  taxReturnsClientsCopy,
+                  strFriendlyName
+                );
+              } else {
+                strFriendlyName =
+                  year +
+                  " " +
+                  strClientType +
+                  " " +
+                  clientCode +
+                  " (" +
+                  clientName +
+                  ") " +
+                  " Account Copy.pdf";
+
+                console.log("strFriendlyName:" + strFriendlyName);
+
+                addData(
+                  executionID,
+                  item.BatchItemGuid,
+                  item.FileName,
+                  groupId,
+                  taxReturnsAccountantsCopy,
+                  strFriendlyName
+                );
+              }
+            });
+          }
         }
       }
+
+      await processData(myDataArray, token);
+      nextResponseMessage="Successfully uploaded!";
+    }
+    else
+    {
+      nextResponseMessage="Error in Printing!";
     }
 
-    await processData(myDataArray, token);
-
-    return NextResponse.json("Successfully uploaded!!", { status: 200 });
+    return NextResponse.json(nextResponseMessage + strClientType, {
+      status: 200,
+    });
   } catch (error) {
     console.error("Error in GET handler:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

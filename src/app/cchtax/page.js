@@ -18,7 +18,11 @@ export default function HomePage() {
   const [selectedYearValue, setSelectedYearValue] = useState("Select Year");
   const [selectedText, setSelectedText] = useState("");
   const [sharedData, setSharedData] = useState([]);
-  const [formData, setFormData] = useState({ to: 'thuraiit@gmail.com', subject: 'Testing', text: 'Testing123' });
+  const [formData, setFormData] = useState({
+    to: "",
+    subject: "",
+    text: "",
+  });
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -61,6 +65,7 @@ export default function HomePage() {
     setSelectedValue(selectedGroupId);
     if (event.target && event.target.options) {
       setSelectedText(event.target.options[event.target.selectedIndex].text);
+      //console.log(event.target.options[event.target.selectedIndex].text);
     }
   };
 
@@ -111,7 +116,7 @@ export default function HomePage() {
     if (taxDataResponse.ok) {
       const taxDataResult = await taxDataResponse.json();
       setSharedData(taxDataResult);
-      console.log("taxDataResult:" + taxDataResult);
+      //console.log("taxDataResult:" + taxDataResult);
     }
     setLoading2(false); // Hide spinner when the operation finishes
   };
@@ -160,7 +165,6 @@ export default function HomePage() {
         // });
 
         setDataDropdown(dropdownData);
-
         const currentYear = new Date().getFullYear();
 
         for (let year = currentYear; year >= currentYear - 10; year--) {
@@ -210,6 +214,15 @@ export default function HomePage() {
     }
   };
 
+  const getValueAfterHyphen = (str) => {
+    const parts = str.split("-");
+    return parts.length > 1 ? parts[1].trim() : "";
+  };
+
+  const cleanString = (str) => {
+    return str.replace(/["\\]/g, "");
+  };
+
   const handlePrint = async () => {
     if (selectedValue === "Select Client") {
       setError("Please select a value from the clients dropdown.");
@@ -219,9 +232,15 @@ export default function HomePage() {
       try {
         setError("");
         setLoading1(true); // Show spinner when the operation starts
-        //let filterInfo = "TaxYear eq '2023'";
-        let filterInfo = `TaxYear eq '${selectedYearValue}' and ClientID eq '${selectedValue}'`;
+
+        let strClientID = getValueAfterHyphen(selectedText);
+
+        let filterInfo = `TaxYear eq '${selectedYearValue}' and ClientID eq '${strClientID}'`;
         let query = `'${selectedYearValue}'|'${selectedValue}'|'${selectedText}'`;
+
+        console.log("filterInfo:" + filterInfo);
+        console.log("query:" + query);
+
         const response = await fetch(
           `/api/getAccessToken?filter=${filterInfo}&query=${query}`,
           {
@@ -230,11 +249,58 @@ export default function HomePage() {
         );
 
         const result = await response.json();
+
+        let outputResult = JSON.stringify(result);
+        const splitString = outputResult.split("!");
+        if (splitString.length > 1) {
+          setData(cleanString(splitString[0]));
+          let strClientType = splitString[1];
+          let strTaxReturn = "";
+          if (strClientType == "INDIVIDUAL") {
+            strTaxReturn = "04_tax_returns";
+          } else {
+            strTaxReturn = "10_tax_returns";
+          }
+
+          let clinkedURL = "https://efm.clinked.app/groups/";
+
+          let clientNameURL = selectedText
+            .toLowerCase() // Convert to lowercase
+            .replace(/ - /g, "___") // Replace space-hyphen-space with triple underscores
+            .replace(/ /g, "_"); // Replace spaces with underscores
+
+          let url =
+            clinkedURL +
+            clientNameURL +
+            "/files/" +
+            strTaxReturn +
+            "-" +
+            selectedYearValue;
+          console.log("url:" + url);
+
+          const formEmailData = {
+            to: "thuraiit@gmail.com",
+            subject: "Documents have been printed successfully",
+            html: `Documents have been printed successfully. You can view it here: <a href="${url}" target="_blank">click here</a>`,
+          };
+
+          const responseEmail = await fetch("/api/sendEmail", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formEmailData),
+          });
+
+          const resultEmail = await responseEmail.json();
+          if (responseEmail.ok) {
+            console.log("Email sent successfully!");
+          } else {
+            console.log(`Error: ${resultEmail.message}`);
+          }
+        } else {
+          setData(result);
+        }
         setLoading1(false); // Hide spinner when the operation finishes
         FetchTaxFolder();
-        setData(result);
-
-        // console.log("result" + result);
       } catch (err) {
         setError("Failed to fetch data");
       }
@@ -242,7 +308,7 @@ export default function HomePage() {
   };
 
   const handleFetch = async () => {
-    const response = await fetch("/api/sendEmail", {
+    /*const response = await fetch("/api/sendEmail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
@@ -254,6 +320,31 @@ export default function HomePage() {
     } else {
       console.log(`Error: ${result.message}`);
     }
+
+    
+    let url =
+      "https://efm.clinked.app/groups/gebco_enterprises_llc___968/files/10_tax_returns-2024";
+
+    const formEmailData = {
+      to: "thuraiit@gmail.com",
+      subject: "Documents have been printed successfully",
+      html: `Documents have been printed successfully. You can view it here: <a href="${url}" target="_blank">click here</a>`,
+    };
+
+    const responseEmail = await fetch("/api/sendEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formEmailData),
+    });
+
+    const resultEmail = await responseEmail.json();
+    if (responseEmail.ok) {
+      console.log("Email sent successfully!");
+    } else {
+      console.log(`Error: ${resultEmail.message}`);
+    }
+
+*/
 
     if (selectedValue === "Select Client") {
       setError("Please select a value from the clients dropdown.");

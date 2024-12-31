@@ -3,9 +3,9 @@ import nodemailer from 'nodemailer';
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { to, subject, text } = body;
+        const { to, subject, html } = body;
 
-        if (!to || !subject || !text) {
+        if (!to || !subject || !html) {
             return new Response(JSON.stringify({ message: 'All fields are required' }), { status: 400 });
         }
 
@@ -25,7 +25,7 @@ export async function POST(req) {
             from: `"Your Name" <${process.env.OFFICE365_USER}>`, // Sender address
             to, // Receiver's email address
             subject, // Subject line
-            text, // Plain text body
+            html, // Plain text body
         });
 
         return new Response(JSON.stringify({ message: 'Email sent successfully' }), { status: 200 });

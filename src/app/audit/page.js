@@ -12,6 +12,7 @@ export default function AuditTrail() {
   const [loading, setLoading] = useState(false);
   const [useAndCondition, setUseAndCondition] = useState(false);
   const [loadData, setLoadData] = useState(false);
+  const [isReset, setIsReset] = useState(false);
   const [dataDropdown, setDataDropdown] = useState([]);
 
   const [taxPreparerCondition, setTaxPreparerCondition] = useState(false);
@@ -170,6 +171,16 @@ export default function AuditTrail() {
   //   });
   // };
 
+  let dropDownPush = (result) => {
+    const dropdownData = [];
+    result.forEach((item) => {
+      //console.log(item.friendlyName);
+      dropdownData.push({ value: item.id, label: item.friendlyName });
+    });
+    setDataDropdown(dropdownData);
+    console.log("setDataDropdown 180");
+  };
+
   let filterItems = (mainData, name, stDate, endDate) => {
     // Ensure mainData is valid
     if (!mainData || !Array.isArray(mainData)) {
@@ -297,7 +308,12 @@ export default function AuditTrail() {
       }
     });
 
-    setDataDropdown(dropdownData);
+    console.log("isReset:" + isReset);
+
+    if (!isReset) {
+      setDataDropdown(dropdownData);
+      console.log("Set dropdown 310");
+    }
   }, [
     selectedValueTaxPreparer,
     selectedValueTaxReviewer,
@@ -418,7 +434,6 @@ export default function AuditTrail() {
         setDataClientMapping(ConstructClientMapping);
 
         //console.log("ConstructClientMapping:"+ConstructClientMapping);
-
         //console.log("DataClientMapping" + dataClientMapping);
         //console.log(dropdownDataTaxPreparer);
         //console.log(dropdownDataTaxReviewer);
@@ -433,10 +448,12 @@ export default function AuditTrail() {
         setDataClientName(result);
         setData(result);
 
+        dropDownPush(result);
+
+        /*
         const dropdownData = [];
         let incMe = 0;
         result.forEach((item) => {
-
           //console.log("userName"+storedName+"item.friendlyName"+item.friendlyName);
           // const filteredItems = dataClient.value.filter(
           //   (itemClient) =>
@@ -445,17 +462,16 @@ export default function AuditTrail() {
           // );
           //if (filteredItems.length == 1) {
           //console.log(item.friendlyName.trim());
-          
+
           dropdownData.push({ value: item.id, label: item.friendlyName });
 
           //console.log("incMe:" + incMe++);
           //incMe = incMe+1;
           //console.log(incMe+"-"+item.friendlyName);
           //}
-
         });
-
-        setDataDropdown(dropdownData);
+          setDataDropdown(dropdownData);
+        */
         setDataDropdownTaxPreparer(dropdownDataTaxPreparer);
         setDataDropdownTaxReviewer(dropdownDataTaxReviewer);
         setDataDropdownAccountManager(dropdownDataAccountManager);
@@ -477,7 +493,7 @@ export default function AuditTrail() {
   const handleChange1 = (event) => {
     event.preventDefault();
     setSelectedValueTaxPreparer(event.target.value);
-
+    setIsReset(false);
     const value = event.target.value.toLowerCase();
     if (value === "") {
       setTaxPreparerCondition(false);
@@ -489,7 +505,7 @@ export default function AuditTrail() {
   const handleChange2 = (event) => {
     event.preventDefault();
     setSelectedValueTaxReviewer(event.target.value);
-
+    setIsReset(false);
     const value = event.target.value.toLowerCase();
     if (value === "") {
       setTaxReviewerCondition(false);
@@ -501,7 +517,7 @@ export default function AuditTrail() {
   const handleChange3 = (event) => {
     event.preventDefault();
     setSelectedValueAccountManager(event.target.value);
-
+    setIsReset(false);
     const value = event.target.value.toLowerCase();
     if (value === "") {
       setAccountManagerCondition(false);
@@ -513,7 +529,7 @@ export default function AuditTrail() {
   const handleChange4 = (event) => {
     event.preventDefault();
     setSelectedValueAccountRepresentative(event.target.value);
-
+    setIsReset(false);
     const value = event.target.value.toLowerCase();
     if (value === "") {
       setAccountRepresentativeCondition(false);
@@ -523,7 +539,9 @@ export default function AuditTrail() {
   };
 
   const handleReset = () => {
-    setSelectedValue("Select Clients");
+    //setSelectedValue("Select Clients");
+    setSelectedValue([]);
+
     setSelectedMember("Select User");
     setError("");
 
@@ -537,11 +555,62 @@ export default function AuditTrail() {
     setSelectedEndDate(today);
     setMembers([]);
     setSharedData([]);
+
+    //onsole.log("dataClientName:" + dataClientName);
+    setIsReset(true);
+    dropDownPush(dataClientName);
+
+    setTaxPreparerCondition(false);
+    setTaxReviewerCondition(false);
+    setAccountManagerCondition(false);
+    setAccountRepresentativeCondition(false);
   };
 
   const handleDownload = async (event) => {
     event.preventDefault();
+    const selectedValues = selectedValue.map((option) => option.value);
 
+    for (const selectedValue of selectedValues) {
+      try {
+        const response = await fetch(
+          `/api/fileDownload?groupID=${selectedValue}&fileID=${event.target.id}`
+        );
+
+        if (response.ok) {
+          console.log("File download successful for groupID:", selectedValue);
+
+          const blob = await response.blob();
+
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+
+          // Extract filename from Content-Disposition header if available
+          const contentDisposition = response.headers.get(
+            "Content-Disposition"
+          );
+          const fileName = contentDisposition
+            ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+            : "downloaded_file";
+
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          break; // Exit the loop once a successful response is received
+        } else {
+          console.error(
+            "Failed to download the file for groupID:",
+            selectedValue
+          );
+        }
+      } catch (error) {
+        console.error("Error during fetch:", error);
+      }
+    }
+
+    /*
     try {
       const response = await fetch(
         `/api/fileDownload?groupID=${selectedValue}&fileID=${event.target.id}`
@@ -551,6 +620,7 @@ export default function AuditTrail() {
       }
 
       const blob = await response.blob();
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -570,6 +640,7 @@ export default function AuditTrail() {
       console.error("Error downloading file:", err);
     } finally {
     }
+    */
   };
 
   const handleChange = async (event) => {
@@ -579,6 +650,7 @@ export default function AuditTrail() {
     //const selectedGroupId = event.target.value;
     //setSelectedValue(selectedGroupId);
 
+    setError("");
     setSelectedValue(event || []);
 
     //console.log("selectedValue:"+event.map((option) => option.value).join(','));
@@ -653,6 +725,7 @@ export default function AuditTrail() {
   const fetchSharedData = async () => {
     try {
       setError("");
+      let isSuccess = false;
       const selectedValues = selectedValue.map((option) => option.value);
 
       // Create an array of fetch promises
@@ -661,52 +734,50 @@ export default function AuditTrail() {
           `/api/getSharedFolder?groupId=${value}`
         );
         if (sharedDataResponse.ok) {
+          isSuccess = true;
           return await sharedDataResponse.json();
         } else {
-          console.error(`Failed to fetch shared data for group ${value}`);
+          //console.error(`Failed to fetch shared data for group ${value}`);
           return [];
         }
       });
 
-      // Resolve all promises
-      const results = await Promise.all(promises);
+      if (isSuccess) {
+        const results = await Promise.all(promises);
+        const allSharedData = results.flat();
+        const itemsLength = allSharedData[0].items.length;
 
-      // Flatten the results and set the shared data
-      const allSharedData = results.flat();
+        let strStartDate = selectedStartDate;
+        let strEndDate = selectedEndDate;
+        let memeberName = null;
 
-      //console.log("allSharedData:"+JSON.stringify(allSharedData));
-      //setSharedData(allSharedData);
+        const startDate = convertToTimestamp(strStartDate);
+        const endDate = convertToTimestamp(strEndDate);
 
-      let strStartDate = selectedStartDate;
-      let strEndDate = selectedEndDate;
-      let memeberName = null;
+        if (selectedMember != "Select User") {
+          memeberName = selectedMember;
+        }
 
-      const startDate = convertToTimestamp(strStartDate);
-      const endDate = convertToTimestamp(strEndDate);
+        const filteredItems = filterItems(
+          allSharedData,
+          memeberName,
+          startDate,
+          endDate
+        );
 
-      if (selectedMember != "Select User") {
-        memeberName = selectedMember;
+        if (itemsLength == 0) {
+          setError("03 client shared folder don't have data");
+        } else if (filteredItems.length == 0) {
+          setError("Search criteria don't have data");
+        }
+
+        //console.log("filteredItems:"+JSON.stringify(filteredItems))
+
+        setSharedData(filteredItems);
+        setLoadData(true);
+      } else {
+        setError("03 client shared folder don't have data");
       }
-
-      //console.log("memeberName:"+selectedMember);
-      //console.log("filterItems before");
-
-      const filteredItems = filterItems(
-        allSharedData,
-        memeberName,
-        startDate,
-        endDate
-      );
-
-      //console.log("filterItems after");
-      //console.log(filteredItems.length);
-
-      if (filteredItems.length == 0) {
-        setError("Search criteria don't have data");
-        console.log(filteredItems.length);
-      }
-      setSharedData(filteredItems);
-      setLoadData(true);
     } catch (error) {
       console.error("Error fetching shared data:", error.message);
     }
