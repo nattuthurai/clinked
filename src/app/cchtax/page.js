@@ -308,6 +308,22 @@ export default function HomePage() {
   };
 
   const handleFetch = async () => {
+
+    /*
+    working fine and need to integrate
+    const response = await fetch(`/api/getEmail`, {
+      method: "GET",
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      let outputResult = JSON.stringify(result);
+      console.log("outputResult:" + outputResult);
+    } else {
+      console.log(`Error: ${result.message}`);
+    }*/
+
     /*const response = await fetch("/api/sendEmail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
