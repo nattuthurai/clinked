@@ -69,8 +69,8 @@ export default function AuditTrail() {
   const checkDateWithinThreeMonths = async () => {
     const today = new Date();
     const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(today.getMonth() - 3);
-    //threeMonthsAgo.setMonth(today.getMonth() - 5);
+    //threeMonthsAgo.setMonth(today.getMonth() - 3);
+    threeMonthsAgo.setMonth(today.getMonth() - 4);
 
     //console.log("selectedStartDate:"+selectedStartDate);
 
@@ -178,7 +178,7 @@ export default function AuditTrail() {
       dropdownData.push({ value: item.id, label: item.friendlyName });
     });
     setDataDropdown(dropdownData);
-    console.log("setDataDropdown 180");
+    //console.log("setDataDropdown 180");
   };
 
   let filterItems = (mainData, name, stDate, endDate) => {
@@ -312,7 +312,7 @@ export default function AuditTrail() {
 
     if (!isReset) {
       setDataDropdown(dropdownData);
-      console.log("Set dropdown 310");
+      //console.log("Set dropdown 310");
     }
   }, [
     selectedValueTaxPreparer,
@@ -724,6 +724,76 @@ export default function AuditTrail() {
 
   const fetchSharedData = async () => {
     try {
+      setError(""); // Clear previous errors
+      let isSuccess = false;
+  
+      // Get selected values
+      const selectedValues = selectedValue.map((option) => option.value);
+  
+      // Fetch data for each selected value
+      const results = await Promise.all(
+        selectedValues.map(async (value) => {
+          try {
+            const sharedDataResponse = await fetch(
+              `/api/getSharedFolder?groupId=${value}`
+            );
+  
+            if (sharedDataResponse.ok) {
+              isSuccess = true;
+              console.log("Fetch successful for groupId:", value);
+              return await sharedDataResponse.json();
+            } else {
+              console.error(`Failed to fetch shared data for group ${value}`);
+              return [];
+            }
+          } catch (error) {
+            console.error(`Error fetching data for group ${value}:`, error.message);
+            return [];
+          }
+        })
+      );
+  
+      console.log("isSuccess:", isSuccess);
+  
+      if (isSuccess) {
+        // Flatten the array of results
+        const allSharedData = results.flat();
+        const itemsLength = allSharedData.length > 0 ? allSharedData[0].items?.length || 0 : 0;
+  
+        const strStartDate = selectedStartDate;
+        const strEndDate = selectedEndDate;
+        let memberName = selectedMember !== "Select User" ? selectedMember : null;
+  
+        const startDate = convertToTimestamp(strStartDate);
+        const endDate = convertToTimestamp(strEndDate);
+  
+        // Filter items based on criteria
+        const filteredItems = filterItems(allSharedData, memberName, startDate, endDate);
+  
+        // Handle errors based on filtering
+        if (itemsLength === 0) {
+          setError("03 client shared folder doesn't have data.");
+        } else if (filteredItems.length === 0) {
+          setError("Search criteria don't have data.");
+        } else {
+          // Set filtered data and mark as loaded
+          setSharedData(filteredItems);
+          setLoadData(true);
+        }
+      } else {
+        setError("03 client shared folder doesn't have data!");
+      }
+    } catch (error) {
+      console.error("Error fetching shared data:", error.message);
+      setError("An error occurred while fetching shared data.");
+    }
+  };
+  
+
+
+/*
+  const fetchSharedData = async () => {
+    try {
       setError("");
       let isSuccess = false;
       const selectedValues = selectedValue.map((option) => option.value);
@@ -735,12 +805,15 @@ export default function AuditTrail() {
         );
         if (sharedDataResponse.ok) {
           isSuccess = true;
+          console.log("im true section");
           return await sharedDataResponse.json();
         } else {
           //console.error(`Failed to fetch shared data for group ${value}`);
           return [];
         }
       });
+
+      console.log("isSuccess:"+isSuccess);
 
       if (isSuccess) {
         const results = await Promise.all(promises);
@@ -776,12 +849,13 @@ export default function AuditTrail() {
         setSharedData(filteredItems);
         setLoadData(true);
       } else {
-        setError("03 client shared folder don't have data");
+        setError("03 client shared folder don't have data!");
       }
     } catch (error) {
       console.error("Error fetching shared data:", error.message);
     }
   };
+*/
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -1174,11 +1248,16 @@ export default function AuditTrail() {
                 </div>
 
                 <div className="flex items-center space-x-4 mt-2">
-                  {error && <p style={{ color: "red" }}>{error}</p>}
+                  
                 </div>
               </div>
-              <div className="flex justify-between   mt-6">
-                {" "}
+
+              <div className="flex justify-between mt-6">
+              {error && <p style={{ color: "red" }}>{error}</p>}
+              </div>
+
+              <div className="flex justify-between mt-6">
+                
                 <button
                   type="submit"
                   onClick={handleSubmit}
